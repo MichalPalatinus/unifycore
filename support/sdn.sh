@@ -1,6 +1,4 @@
 #!/bin/bash
-# start-up script for the whole unifycore topology (both forwarders and controllers)
-
 
 if [[ $EUID -ne 0 ]]; then
     echo 'Dont forget to use sudo ;-)'
@@ -40,17 +38,19 @@ function start_cnt() {
 }
 
 function do_start() {
-  # big topology from the project documentation (and README)
+        #rm /root/unifycore/support/hosts_backup
+        cp /etc/hosts /root/unifycore/support/hosts_backup
+  # velka topologia podla dokumentacie
 	start_fwd a 00000000000a 'eth2,corea2,corea3,corea4'
 	start_fwd b 00000000000b 'coreb1,coreb2,coreb3'
 	start_fwd c 00000000000c 'corec1,corec2,corec3'
-	start_fwd d 00000000000d 'cored1,cored2,cored3'
-	start_fwd e 00000000000e 'coree1,coree2'
+	start_fwd d 00000000000d 'cored1,cored2,cored3,cored4'
+	start_fwd e 00000000000e 'coree1,coree2,coree3'
 	#sleep 0.5
 
 	start_cnt
 	sleep 0.5
-
+        #ifconfig internet0 172.20.255.254 netmask 255.255.255.0
 	#valgrind_fwd a 00000000000a 'eth2,corea2,corea3,corea4'
 	#debug_fwd a 00000000000a 'eth2,corea2,corea3,corea4'
 }
@@ -62,6 +62,10 @@ function do_stop() {
 
 	# and controller
 	killall ryu-manager
+        
+        # reload /etc/hosts
+        cp /root/unifycore/support/hosts_backup /etc/hosts
+        rm /root/unifycore/support/hosts_backup
 }
 
 case $1 in
