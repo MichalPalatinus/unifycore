@@ -1,0 +1,3998 @@
+<!doctype html>
+<html>
+<head>
+  <title>Unifycore Manager</title>
+  <meta charset="UTF-8">
+  <meta content="utf-8" http-equiv="encoding"> 
+  <script src="./node_modules/vis/dist/vis.js"></script>
+  <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+  <script src="http://code.jquery.com/jquery-1.10.2.js"></script>
+  <script src="http://code.jquery.com/ui/1.11.4/jquery-ui.js"></script>
+  <!--<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.5.2/jquery.min.js"></script>
+  <script src="http://cdnjs.cloudflare.com/ajax/libs/modernizr/2.8.2/modernizr.js"></script>-->
+  <link href="./node_modules/vis/dist/vis.css" rel="stylesheet" type="text/css" />
+  <link rel="stylesheet" href="//code.jquery.com/ui/1.11.4/themes/smoothness/jquery-ui.css"/>
+</head>
+<body>
+<div id = "dimScreen"></div>
+<!--<div class="se-pre-con"></div>-->
+<div id="header"> <h1>Unifycore</h1> </div>
+    <div class="tab-content">
+		<div id="tab1" class="tab active">	
+			<div id="mynetwork"> 	</div>	    
+				<div id="dialog" title="OF Table"  style="display:none; width: 100%;">	
+				<TABLE ID="oTable" BORDER="1" BGCOLOR="80CEB9"></TABLE>
+				<button class="add_flow_btns" onclick= "add_flow_dialog()">Add flow</button>	
+				</div>
+			<div id="edge_dialog" style="display:none;"></div>
+			<div id="flow_dialog" style="display:none;">
+				<div STYLE="overflow: auto;">
+					<div id="match_combo">
+						<p>Set match rules</p>				
+					</div>
+					<button type="button" id="add_rule" class="add_flow_btns" onclick="add_rule()">Add</button>
+					<div id="set_inst">
+						<p>Set Instructions</p>	
+					</div>
+					<button type="button" id="add_inst" class="add_flow_btns" onclick="add_instruction()">Add</button>
+						<div id="set_actions">
+							<p>Actions</p>	
+						</div>
+					<button type="button" id="add_action" class="add_flow_btns" onclick="add_action()">Add</button>
+					<p></p>
+					<div id="tab_prio">
+						<label>Table ID</label>	
+						<input id="table_id" type="text" size="10" />
+						<label>Priority</label>
+						<input id="priority" type="text" size="10" />	
+						<label>Cookie</label>
+						<input id="cookie" type="text" size="10" />	
+					</div>
+					<p></p>
+					<button type="button" id="submit_btn" class="add_flow_btns" onclick= "submit_rules()">Submit</button>	
+				</div>
+			</div>
+			<div class="manager">
+				<div id="menu"> 
+					<ul class="manager-links">
+						<li class='menu_active'><a href='#Stats'><span>Statistics</span></a></li> 
+						<li ><a href="#PDP" class="pdp_submenu"><span>PDP Contexts</span></a></li>
+						<li><a href='#MAC_Tunnel' class="tunnel_submenu"><span>MAC Tunnels</span></a></li>
+						<li ><a href="#ADD_APN" class="apn_submenu"><span>Add APN</span></a></li> 	     
+					</ul>
+				</div>
+				<div class="manager_content">
+					<div id="MAC_Tunnel" class="menu_item">
+						<div STYLE="overflow-y: auto; height: 95%;">
+							<TABLE ID="Tunnel_table" BORDER="1" BGCOLOR="EEEEEE"></TABLE>
+						</div>
+					</div>
+					<div id="PDP" class="menu_item">
+						<div STYLE="overflow-y: auto; height: 95%;">
+							<TABLE id="pdpTable" BORDER="1" BGCOLOR="#EEEEEE"></TABLE>
+						</div>
+					</div>
+					<div id="Stats"  class="menu_item menu_active">
+						<select id="fwd_num_cb" class="stats_combobox" onchange="switch_fwd_stats(this)"></select>
+						<select id="port_statistic_cb" class="stats_combobox" onchange="switch_port_stats(this)">
+							<option id="orx_packets" value="rx_packets" selected="true">RX packets</option>
+							<option id="otx_packets" value="tx_packets" >TX packets</option>
+							<option id="orx_bytes" value="rx_bytes">RX bytes</option>
+							<option id="otx_bytes" value="tx_bytes">TX bytes</option>
+							<option id="orx_dropped" value="rx_dropped">RX dropped</option>
+							<option id="otx_dropped" value="tx_dropped">TX dropped</option>
+							<option id="orx_errors" value="rx_errors">RX errors</option>
+							<option id="otx_errors" value="tx_errors">TX errors</option>
+							<option id="orx_frame_err" value="rx_frame_err">RX frame errors</option>
+							<option id="orx_over_err" value="rx_over_err">RX overrun errors</option>
+							<option id="orx_crc_err" value="rx_crc_err">RX CRC errors</option>
+							<option id="ocollisions" value="collisions">Collisions</option>
+							<!--<option id="oduration_sec" value="duration_sec">Time alive (sec)</option>
+							<option id="oduration_nsec" value="duration_nsec">Time alive (nsec)</option> -->
+						</select>
+						<div id="graph_container" class="statistics_container"></div>
+						<p></p>
+						<div id="flow_stats_menu">
+							<select id="flow_fwd_cb" class="stats_combobox" onchange="switch_fwd_flow(this)" selected="true"></select>
+							<select id="flow_statistic_cb" class="stats_combobox" onchange="switch_flow_stats(this)">
+								<option id="opacket_count" value="packet_count">Packet count</option>
+								<option id="obyte_count" value="byte_count">Byte count</option>
+								<!--<option>Idle timeout</option>
+								<option>Hard timeout</option> -->
+							</select>
+						</div>
+						<div id="flow_graph_container" class="statistics_container"></div>	
+					</div>
+					<div id='ADD_APN' class="menu_item">
+						<div id="choose_port_div">
+							<!--<p id="apn_title">Add new APN node to network</p><br> -->
+							<select id="add_apn_fwds_cb" onchange="apn_switch_forwarder(this)"></select>
+						</div>
+						<BR>
+						<label id="apn_name_label" for="apn_name">APN name</label>
+						<input type="text" id="apn_name"/><br><BR>	
+						<label id="apn_ip_label" for="apn_ip">APN IP</label>
+						<input type="text" id="apn_ip"/><br><BR>	
+						<button id="add_apn_btn" onclick="add_new_apn()">Add APN</button>	
+					</div>							
+				</div>			
+			</div>	
+			<div id="flow_stats_legend">
+				<div id="legend"></div>
+			</div>
+		</div>       
+	</div>
+	<div id="footer">
+		<a href="http://www.unifycore.com">www.unifycore.com<BR/></a>
+		<a href="https://github.com/orgs/unifycore">GitHub Unifycore</a>
+	</div>
+	<script type="text/javascript">
+//background: url(Unifycore_manager_folder/simple-pre-loader/images/loader-64x/loading_icon.gif) center no-repeat #fff; ...povodne v riadku 150 
+
+var $j = jQuery.noConflict();
+
+var INTEGER = 2147483647;
+var APN_NAMES = new Array();
+var APN_IPs = new Array();
+var INTERVAL = 60000;
+var WINDOW_LOADER = 0;
+var EDGES;  
+var ALL_PORTS = new Array();
+var USED_PORTS = new Array();
+var FREE_PORTS = new Array;  
+gdata = "";
+var container = document.getElementById('mynetwork');
+var network;
+var dataset; 
+var old_network;
+
+xmlhttp=new XMLHttpRequest();
+load_topo_json(true);
+load_active_pdp(true);
+setInterval(function(){load_active_pdp(false)}, INTERVAL);
+
+function  visualize(json, control) { 
+	USED_PORTS = {}; 
+	EDGES = []; 
+	var dataSaved = JSON.parse(json);
+	var edges = new vis.DataSet();
+	var exists = false; 
+	var count = 0;
+	for(i=0; i<dataSaved.nodes.length; i++){
+		if(!isNaN(dataSaved.nodes[i].id)){
+			USED_PORTS[dataSaved.nodes[i].id] = [];
+		}
+	}
+	for(i=0; i<dataSaved.links.length; i++){
+		if(!isNaN(dataSaved.nodes[dataSaved.links[i].source].id)){
+			USED_PORTS[parseInt(dataSaved.nodes[dataSaved.links[i].source].id)].push(parseInt(dataSaved.links[i].interf));
+		}
+		for(j=1; j<=count; j++){
+			if(count>0 && edges.get("edge"+j).from == dataSaved.nodes[dataSaved.links[i].target].id && edges.get("edge"+j).to == dataSaved.nodes[dataSaved.links[i].source].id){    
+				exists = true;
+			}
+		}
+		if(exists != true){
+			count++;
+			edges.add([{id: "edge"+j, from: dataSaved.nodes[dataSaved.links[i].source].id, to: dataSaved.nodes[dataSaved.links[i].target].id}]); 
+
+
+
+			var e = {
+					id: "edge"+j,
+					from: dataSaved.nodes[dataSaved.links[i].source].id,
+					to: dataSaved.nodes[dataSaved.links[i].target].id,
+					tunnels: []
+			}  
+			EDGES.push(e);   
+		}
+		exists = false;
+	}		
+
+	dataset = {
+			nodes: dataSaved.nodes,
+			edges: edges
+	}
+	var pom = 0;
+	for(i=0; i<dataset.nodes.length; i++){
+		if(isNaN(dataset.nodes[i].id)){
+			dataset.nodes[i].color = '#BDB69C';
+			dataset.nodes[i].shape = 'label';
+			dataset.nodes[i].radius = '2';
+		}else{
+			dataset.nodes[i].color = '#66C1D7';
+			dataset.nodes[i].shape = 'box';
+		}						 
+	}
+
+	var options = {  
+			// dataManipulation: true,
+			width:  '100%',
+			height: '445px',
+			physics: {
+		barnesHut: {
+		enabled: true,
+		damping: 2,
+	}
+	},
+	stabilize: true,
+	smoothCurves: {dynamic: false, type: '"diagonalCross"'},	               
+	edges: {
+		length: 50,
+		color: 'black',
+		width: 2,
+		color: {
+		color: 'black',
+		highlight: '#FF8080'						
+	}	
+	},				
+	};
+	network = new vis.Network(container, dataset, options);
+
+	network.on('click', function (properties) {
+		console.log(properties);
+		set_tun_table_bckg();
+		if (properties.nodes.length != 0 || properties.edges.length != 0) {
+			if (properties.nodes.length == 0) {
+				display_edge_dialog(properties.edges);
+			}
+			else {
+				load_oftable(properties.nodes);
+
+			}		
+		}					
+	});
+	old_network = json;
+
+
+	if(control==true){
+		load_active_tunnels(true);
+		setInterval(function(){load_active_tunnels(false)}, INTERVAL);
+		load_ports();
+		init_load_flow_stats();
+		init_load_port_stats();	
+		
+		setInterval(function(){load_topo_json(false)}, INTERVAL);
+		
+	}
+}
+
+
+
+function init_xread_flow_stats(){
+	var data_stats=this.responseText; 
+	var json_stats = JSON.parse(data_stats);
+	initialize_flow_graph(json_stats);
+}
+
+function init_load_flow_stats() {
+
+	var xmlhttp_stats1 = new XMLHttpRequest();
+	var xmlhttp_stats2 = new XMLHttpRequest();
+	xmlhttp_stats1.open("GET","http://localhost:8080/dump_flow_stats","true");
+	xmlhttp_stats1.send();
+	xmlhttp_stats2.open("GET","http://localhost:8080/dump_flow_stats","true");
+	xmlhttp_stats2.onload = init_xread_flow_stats;
+	xmlhttp_stats2.send();
+
+}	
+
+function init_load_port_stats() {
+
+	var xmlhttp_stats1 = new XMLHttpRequest();
+	var xmlhttp_stats2 = new XMLHttpRequest();
+	xmlhttp_stats1.open("GET","http://localhost:8080/dump_port_stats","true");
+	xmlhttp_stats1.send();
+	xmlhttp_stats2.open("GET","http://localhost:8080/dump_port_stats","true");
+	xmlhttp_stats2.onload = init_xread_stats;
+	xmlhttp_stats2.send();
+
+}
+
+function init_xread_stats() {
+	var data_stats=this.responseText; 
+	var json_stats = JSON.parse(data_stats);
+	for(var fwd in json_stats){
+		port_set = [];
+		for(i=0; i<json_stats[fwd].length-1; i++){
+			port_set.push(parseInt(json_stats[fwd][i].port_no));
+		}
+		ALL_PORTS[fwd] = port_set;
+	}
+	initialize_port_graph(json_stats);
+}						
+
+function xread() {
+	gdata=this.responseText; 
+	visualize(gdata, true);	
+}
+
+
+function load_topo_json(control){	
+	xmlhttp.open("GET","http://localhost:8080/topology/dump","true");	
+	if(control == true){			
+		xmlhttp.onload = xread;
+	}
+	else{
+		xmlhttp.onload = xread_new_topo;
+	}
+	xmlhttp.send();
+}
+
+function xread_new_topo(){
+	var new_topo=this.responseText;
+	var new_json = JSON.parse(new_topo);
+	if(new_topo.toString() != old_network.toString()){
+		gdata = new_topo;
+		visualize(gdata, false);
+	}
+	else{
+	}
+}
+
+function xread_oftable() {
+	gdata=this.responseText; 
+	var json = JSON.parse(gdata);
+	//alert(gdata);
+	$j(function() {
+		$j( "#dialog" ).dialog({
+			title: "Forwarder "+ json.id+" Open Flow tables",
+			width: 'auto'     	    
+		});
+	});
+	$j('#oTable').empty()
+	create_OF_table(json);
+}
+
+function load_oftable(id){
+	xmlhttp.open("GET","http://localhost:8080/oftables/dump/"+id,"true");
+	xmlhttp.onload = xread_oftable;
+	xmlhttp.send();
+}
+
+function load_active_tunnels(control) {
+	var xmlhttp_tun = new XMLHttpRequest();
+	xmlhttp_tun.open("GET","http://localhost:8080/tunnels/active/dump","true");
+	if(control == true){
+		xmlhttp_tun.onload = xread_tunnels;
+	}
+	else{
+		xmlhttp_tun.onload = xread_tunnels_refresh;
+	}
+	xmlhttp_tun.send();
+}	
+
+function add_flow_dialog(){
+	$j(function() {
+		$j( "#flow_dialog" ).dialog({
+			title: "Enter Flow Rules",
+			width:619,				
+			height: 500,
+			close: function( event, ui ) {
+			clear_selections()
+			},
+			open: function (event, ui) {
+				add_rule(),					
+				add_action(), 
+				add_instruction()	
+			}
+		});
+				
+	});
+}
+
+function select_edges(TUNNEL) {
+	var selection = [];
+	console.log(TUNNEL);
+	//for (j=0; j<ACTIVE_TUNNELS.length; j++) {
+	//if (ACTIVE_TUNNELS[j].id == x.toString()) {					
+	for (k=0; k<TUNNEL.tun_path.length-1; k++) {				
+		for (i=1; i<=dataset.edges.length; i++){			
+			console.log(dataset.edges.get("edge"+i).id + " from: "+ dataset.edges.get("edge"+i).from +" to: " +dataset.edges.get("edge"+i).to);									
+			if ((dataset.edges.get("edge"+i).from == TUNNEL.tun_path[k] &&  dataset.edges.get("edge"+i).to == TUNNEL.tun_path[k+1]) || (dataset.edges.get("edge"+i).to == TUNNEL.tun_path[k] && dataset.edges.get("edge"+i).from == TUNNEL.tun_path[k+1])) {		
+				selection.push("edge"+i);
+			}
+		}
+	}									
+	//}	
+	//}				
+	network.selectEdges(selection);
+}
+
+function display_edge_dialog(edg){
+	console.log("Hrana" + edg[0]);
+	var tunnelList = [];
+	var rows = [];
+	var to = dataset.edges.get(edg[0]).to;
+	var from = dataset.edges.get(edg[0]).from;
+	console.log("From: "+from.toString() + ", To: " + to.toString())
+	for (j=0; j<ACTIVE_TUNNELS.length; j++) {
+		for (k=0; k<ACTIVE_TUNNELS[j].tun_path.length-1; k++) {	
+			if ((from == ACTIVE_TUNNELS[j].tun_path[k+1] &&  to == ACTIVE_TUNNELS[j].tun_path[k]) || (to == ACTIVE_TUNNELS[j].tun_path[k+1] && from == ACTIVE_TUNNELS[j].tun_path[k])) {		
+				tunnelList.push(ACTIVE_TUNNELS[j]);
+				console.log(ACTIVE_TUNNELS[j]);
+				var row  = document.getElementById(ACTIVE_TUNNELS[j].row_id);	
+				rows.push(row);
+
+			}
+		}
+	}						
+	for (i=0; i<rows.length; i++) {
+		$j(rows[i]).css("background","#FF8080");
+	}
+}
+
+function set_tun_table_bckg() {
+	var table = document.getElementById("Tunnel_table");
+	var tbody = document.getElementsByClassName("tun_tablebody");
+	console.log("Deselecting tunnels in table");
+	for (i=0; i<tbody[0].rows.length; i++) {
+		$j(tbody[0].rows[i]).css("background","#EEEEEE");
+	}
+}		
+
+function create_OF_table(json){
+	var actions = load_actions();
+	//var matches = load_matches();
+	var instructions = load_instructions();
+	var act_subtypes = load_action_subtypes();
+	var hashmap = new Array();
+
+	var table = document.getElementById("oTable");
+	// Declare variables and create the header, footer, and caption.
+	var oTHead = table.createTHead();
+	var caption = table.createCaption();
+	var oRow, oCell, row, cell;
+	var i, j;
+
+	var heading = new Array();
+	heading[0] = "Match";
+	heading[1] = "Priority";
+	heading[2] = "Inst";
+	heading[3] = "Flow type";
+	heading[4] = "";
+
+	// Insert a row into the header.
+	oRow = oTHead.insertRow(-1);
+	oTHead.setAttribute("bgColor","#EEEEEE"); //# BDB69C
+
+	// Insert cells into the header row.
+	for (i=0; i<heading.length; i++)
+	{
+		oCell = oRow.insertCell(i);
+		oCell.align = "center";
+		oCell.style.fontWeight = "bold";
+		oCell.innerHTML = heading[i];
+	}
+	// Insert rows and cells into bodies.
+	for(table_index=0; table_index<json.tables.length; table_index++){
+		oRow = table.insertRow(-1);
+		oRow.style.backgroundColor = "#80CEB9";
+		oRow.style.width="100%";
+		oRow.innerHTML = name_table(json.tables[table_index].id);
+		console.log("pred "+json.tables[table_index].flows);
+		json.tables[table_index].flows.sort(dynamicSort("priority"));
+		console.log("Po "+json.tables[table_index].flows);
+
+		for (i=0; i<json.tables[table_index].flows.length; i++){
+			var tab_flow = {
+					table: table_index,
+					flow: i
+			};
+			oRow = table.insertRow(-1); 
+			hashmap[oRow.rowIndex] = tab_flow;
+			console.log('row index=' + oRow.rowIndex);
+			console.log(hashmap);
+			oCell = oRow.insertCell(0); 
+			var str = json.tables[table_index].flows[i].match._fields2;
+			var pom = str.toString();
+			var arr = pom.split(',');
+			var input = "";//matches[json.tables[table_index].flows[i].match.type] + "</BR>";
+			for (l=0; l<arr.length/2; l++){
+				input = 	input + arr[l*2] + "=" + arr[(l*2)+1] + ", "					
+			}	
+
+			oCell.innerHTML = input;
+			oCell = oRow.insertCell(1);
+			oCell.innerHTML = json.tables[table_index].flows[i].priority;
+			oCell = oRow.insertCell(2); 
+			var instruction = "";
+			for (x=0; x<json.tables[table_index].flows[i].inst.length; x++) {
+				instruction = instruction + "</BR>type: "+instructions[json.tables[table_index].flows[i].inst[x].type] + ", len: " +json.tables[table_index].flows[i].inst[x].len;
+				if (typeof json.tables[table_index].flows[i].inst[x].actions != "undefined"){
+					for (j=0; j<json.tables[table_index].flows[i].inst[x].actions.length; j++) {
+						if (actions[json.tables[table_index].flows[i].inst[x].actions[j].type] == "0xffff") {
+							instruction = instruction + ", action.type=EXPERIMETER_ACTION";
+						}
+						else {
+							instruction = instruction + ", action.type="+actions[json.tables[table_index].flows[i].inst[x].actions[j].type];
+						}
+
+						instruction = instruction + ", action.port="+json.tables[table_index].flows[i].inst[x].actions[j].port;
+					}
+				}		
+			} 												
+			oCell.innerHTML = instruction;	
+
+			oCell = oRow.insertCell(3);
+			var type_name = "";
+			switch(json.tables[table_index].flows[i].flow_type) {
+			case 1:
+				type_name = "APN SPECIAL";
+				break;
+			case 2:
+				type_name = "TOPOLOGY DISCOVERY";
+				break;
+			case 3:
+				type_name = "ACCESS EDGE ADITIONAL";
+				break;
+			case 4:
+				type_name = "TUNNEL RULES";
+				break;
+			case 5:
+				type_name = "PDP RULES";
+				break;
+			case 6:
+				type_name = "USER DEFINED";
+				break;		
+			}
+			oCell.innerHTML = type_name;
+
+			oCell = oRow.insertCell(4);
+			var y = Math.random();
+			var delbtn = document.createElement('BUTTON');
+			var new_id = y.toString();
+			delbtn.id = new_id;
+
+			delbtn.className = 'del_flow';
+			delbtn.innerHTML="Delete";
+			oCell.appendChild(delbtn);	
+			console.log(delbtn.parentNode.parentNode.rowIndex);	 
+			delbtn.onclick = function(){ try_delete_flow(this, json, hashmap) };
+
+		}	
+	}
+}
+
+function try_delete_flow(btn, json, hashmap) {
+	var type = json.tables[hashmap[btn.parentNode.parentNode.rowIndex].table].flows[hashmap[btn.parentNode.parentNode.rowIndex].flow].flow_type;
+	if(parseInt(type) < 6){
+		$j('<div></div>').appendTo('body')
+		.html('<div><h6>You are about to delete flow created by controller! </BR>Are you sure you want to delete it?</h6></div>')
+		.dialog({
+			modal: true, title: 'WARNING!', zIndex: 10000, autoOpen: true,
+			width: 'auto', resizable: false,
+			buttons: {
+
+			No: function () {
+			$j(this).dialog("close");
+		},
+		Yes: function () {
+			delete_flow(btn, json, hashmap);
+			$j(this).dialog("close");
+		}
+		},
+		close: function (event, ui) {
+			$j(this).remove();
+		}
+		});
+	} 
+	else{
+		delete_flow(btn, json, hashmap);
+	}
+}
+
+function delete_flow(btn, json, hashmap){
+	var inst = json.tables[hashmap[btn.parentNode.parentNode.rowIndex].table].flows[hashmap[btn.parentNode.parentNode.rowIndex].flow].inst; 
+	var mtch = json.tables[hashmap[btn.parentNode.parentNode.rowIndex].table].flows[hashmap[btn.parentNode.parentNode.rowIndex].flow].match._fields2;
+	var table = json.tables[hashmap[btn.parentNode.parentNode.rowIndex].table].id;
+	var prio = json.tables[hashmap[btn.parentNode.parentNode.rowIndex].table].flows[hashmap[btn.parentNode.parentNode.rowIndex].flow].priority;
+	var rule = {
+			id: json.id,
+			table: parseInt(table),
+			priority: prio,
+			fields2: mtch,
+			instruction: inst
+	};
+	var del_json = JSON.stringify(rule);
+	var http = new XMLHttpRequest();
+	http.open("GET","http://localhost:8080/delete_flow/"+del_json, "true");
+	http.send();
+	load_oftable(json.id);
+}
+
+function dynamicSort(property) {
+	var sortOrder = 1;
+	if(property[0] === "-") {
+		sortOrder = -1;
+		property = property.substr(1);
+	}
+	return function (a,b) {
+		var result = (a[property] > b[property]) ? -1 : (a[property] < b[property]) ? 1 : 0;
+		return result * sortOrder;
+	}
+}
+
+function name_table(id){
+	switch(id) {
+	case 3:
+		var name = "MAC_TUNNEL_TABLE";
+		break;
+	case 4:
+		var name = "OF_GPRS_TABLE_IN";
+		break;
+	case 2:
+		var name = "OF_GPRS_TABLE";
+		break;
+	default:
+		var name = "Table "+ id;
+	} 
+	return name;
+}
+
+function list_tunnels(tunnelList) {
+	var dialog = document.getElementById("edge_dialog");
+	dialog.innerHTML = tunnelList;
+}								
+
+//**************************************  ADD FLOW *****************************************
+
+var divko = document.createElement("div");
+var act_divko = document.createElement("div");
+var match_value = new Array();	
+var action_value = new Array();	
+var inst_value = new Array();
+
+var json_ports;
+
+function match_selected(selection) {
+	var val = selection.options[selection.selectedIndex].value;
+	if(val != "eth_type=int('0x0800', 16)" && val != "eth_type=int('0x0806', 16)" && val != "eth_type=int('0x06DD', 16)" && val != "ip_proto=int('1')" && val != "ip_proto=int('6')" && val != "ip_proto=int('17')"){
+		if (match_value[selection.id][1] == 0) {
+			var textfield = document.createElement('input');
+			textfield.className = "rule_input"
+					textfield.id = Date.now();
+			var div = document.getElementById(match_value[selection.id][0]);
+			div.appendChild(textfield);
+			match_value[selection.id][1] = textfield.id;
+			console.log(match_value);
+		}
+	}
+	else {
+		if (match_value[selection.id][1] != 0) {
+			var d = document.getElementById(match_value[selection.id][0]);
+			var to_delete = document.getElementById(match_value[selection.id][1]);
+			d.removeChild(to_delete);
+			match_value[selection.id][1] = 0;
+		}
+	}
+}
+
+function delete_match_div(btn){
+	var arr = btn.id.split("_");  
+	var sel_id = arr[1];
+	var divko = document.getElementById(match_value[sel_id][0]);
+	delete match_value[sel_id];
+	var parent = divko.parentNode;
+	parent.removeChild(divko);
+}
+
+function add_rule(){
+
+	var y = document.getElementById("match_combo");
+	divko = document.createElement("div");
+	divko.id = "rule"+Date.now();
+    var delete_btn = document.createElement("button");
+    delete_btn.innerHTML = "x";
+    divko.appendChild(delete_btn);
+    
+	var z = document.createElement("select");
+	z.setAttribute('onchange', "match_selected(this)");
+	z.className="match_comboboxes";
+	z.id = Date.now()+1;
+
+   
+
+	var pair = new Array();
+	pair.push(divko.id); //pair[0]
+	pair.push(0); //pair[1]
+	match_value[z.id] = pair;
+	
+	delete_btn.id = "btn_"+z.id;
+	delete_btn.onclick = function(){ delete_match_div(this); };
+
+	var opt = document.createElement("option");
+	opt.text = "ARP";
+	opt.value = "eth_type=int('0x0806', 16)";
+	opt.selected = "selected";
+	z.add(opt, z[0]);
+	var opt1 = document.createElement("option");
+	opt1.text = "ARP Operation";
+	opt1.value = "arp_op=";
+	opt1.selected = "selected";
+	z.add(opt1, z[1]);
+	var opt2 = document.createElement("option");
+	opt2.text = "ARP Source MAC";
+	opt2.value = "arp_sha=";
+	opt2.selected = "selected";
+	z.add(opt2, z[2]);
+	var opt3 = document.createElement("option");
+	opt3.text = "ARP Source Protocol Address";
+	opt3.value = "arp_spa=";
+	opt3.selected = "selected";
+	z.add(opt3, z[3]);
+	var opt4 = document.createElement("option");
+	opt4.text = "ARP Target MAC";
+	opt4.value = "arp_tha=";
+	opt4.selected = "selected";
+	z.add(opt4, z[4]);
+	var opt5 = document.createElement("option");
+	opt5.text = "ARP Target Protocol Address";
+	opt5.value = "arp_tpa=";
+	opt5.selected = "selected";
+	z.add(opt5, z[5]);
+	var opt6 = document.createElement("option");
+	opt6.text = "Destination IPv4";
+	opt6.value = "ipv4_dst=";
+	opt6.selected = "selected";
+	z.add(opt6, z[6]);
+	var opt7 = document.createElement("option");
+	opt7.text = "Destination IPv6";
+	opt7.value = "ipv6_dst=";
+	opt7.selected = "selected";
+	z.add(opt7, z[7]);
+	var opt8 = document.createElement("option");
+	opt8.text = "Destination MAC";
+	opt8.value = "eth_dst=";
+	opt8.selected = "selected";
+	z.add(opt8, z[8]);
+	var opt9 = document.createElement("option");
+	opt9.text = "ICMP";
+	opt9.value = "ip_proto=int('1')";
+	opt9.selected = "selected";
+	z.add(opt9, z[9]);
+	var opt10 = document.createElement("option");
+	opt10.text = "ICMPv4 Code";
+	opt10.value = "icmpv4_code=";
+	opt10.selected = "selected";
+	z.add(opt10, z[10]);
+	var opt11 = document.createElement("option");
+	opt11.text = "ICMPv4 Type";
+	opt11.value = "icmpv4_type=";
+	opt11.selected = "selected";
+	z.add(opt11, z[11]);
+	var opt12 = document.createElement("option");
+	opt12.text = "ICMPv6 Code";
+	opt12.value = "icmpv6_code=";
+	opt12.selected = "selected";
+	z.add(opt12, z[12]);
+	var opt13 = document.createElement("option");
+	opt13.text = "ICMPv6 Type";
+	opt13.value = "icmpv6_type=";
+	opt13.selected = "selected";
+	z.add(opt13, z[13]);		
+	var opt14 = document.createElement("option");
+	opt14.text = "IPv4";
+	opt14.value = "eth_type=int('0x0800', 16)";
+	opt14.selected = "selected";
+	z.add(opt14, z[14]);
+	var opt15 = document.createElement("option");
+	opt15.text = "IPv6";
+	opt15.value = "eth_type=int('0x06DD', 16)";
+	opt15.selected = "selected";
+	z.add(opt15, z[15]);
+	var opt16 = document.createElement("option");
+	opt16.text = "Source IPv4";
+	opt16.value = "ipv4_src=";
+	opt16.selected = "selected";
+	z.add(opt16, z[16]);
+	var opt17 = document.createElement("option");
+	opt17.text = "Source IPv6";
+	opt17.value = "ipv6_src=";
+	opt17.selected = "selected";
+	z.add(opt17, z[17]);
+	var opt18 = document.createElement("option");
+	opt18.text = "Source MAC";
+	opt18.value = "eth_src=";
+	opt18.selected = "selected";
+	z.add(opt18, z[18]);
+	var opt19 = document.createElement("option");
+	opt19.text = "TCP";
+	opt19.value = "ip_proto=int('6')";
+	opt19.selected = "selected";
+	z.add(opt19, z[19]);
+	var opt20 = document.createElement("option");
+	opt20.text = "TCP Destination Port";
+	opt20.value = "tcp_dst=";
+	opt20.selected = "selected";
+	z.add(opt20, z[20]);
+	var opt21 = document.createElement("option");
+	opt21.text = "TCP Source Port";
+	opt21.value = "tcp_src=";
+	opt21.selected = "selected";
+	z.add(opt21, z[21]);
+	var opt22 = document.createElement("option");
+	opt22.text = "UDP";
+	opt22.value = "ip_proto=int('17')";
+	opt22.selected = "selected";
+	z.add(opt22, z[22]);
+	var opt23 = document.createElement("option");
+	opt23.text = "UDP Destination Port";
+	opt23.value = "udp_dst=";
+	opt23.selected = "selected";
+	z.add(opt23, z[23]);
+	var opt24 = document.createElement("option");
+	opt24.text = "UDP Source Port";
+	opt24.value = "udp_src=";
+	opt24.selected = "selected";
+	z.add(opt24, z[24]);		
+	var opt25 = document.createElement("option");
+	opt25.text = "LLC SAPI";
+	opt25.value = "llc_sapi=";
+	opt25.selected = "selected";
+	z.add(opt25, z[25]);	
+	var opt26 = document.createElement("option");
+	opt26.text = "NS BVCI";
+	opt26.value = "ns_bvci=";
+	opt26.selected = "selected";
+	z.add(opt26, z[26]);	
+	var opt27 = document.createElement("option");
+	opt27.text = "NS Type";
+	opt27.value = "ns_type=";
+	opt27.selected = "selected";
+	z.add(opt27, z[27]);	
+	var opt28 = document.createElement("option");
+	opt28.text = "SNDCP First Segment";
+	opt28.value = "sndcp_first_segment=";
+	opt28.selected = "selected";
+	z.add(opt28, z[28]);	
+	var opt29 = document.createElement("option");
+	opt29.text = "SNDCP More Segments";
+	opt29.value = "sndcp_more_segments=";
+	opt29.selected = "selected";
+	z.add(opt29, z[29]);	
+	var opt30 = document.createElement("option");
+	opt30.text = "SNDCP NSAPI";
+	opt30.value = "sndcp_nsapi=";
+	opt30.selected = "selected";
+	z.add(opt30, z[30]);	
+	var opt31 = document.createElement("option");
+	opt31.text = "BGSSGP TLLI";
+	opt31.value = "bgssgp_tlli=";
+	opt31.selected = "selected";
+	z.add(opt31, z[31]);	
+	//var opt32 = document.createElement("option");
+	//opt32.text = "Tunnel ID";
+	//opt32.value = "tunnel_id=";
+	//opt32.selected = "selected";
+	//z.add(opt32, z[32]);	
+
+	var option = document.createElement("option");
+	option.text = "-- select an option --";
+	option.disabled = true;
+	option.selected = true;
+	z.add(option, z[32]);
+
+	divko.appendChild(z);
+	y.appendChild(divko);
+}  
+
+function action_selected(selection) {
+	var val = selection.options[selection.selectedIndex].value;
+	console.log(action_value);
+	if (action_value[selection.id].length > 1) {
+		var d = document.getElementById(action_value[selection.id][0]);
+		for (i=1; i<action_value[selection.id].length; i++) {
+			var to_delete = document.getElementById(action_value[selection.id][i].input);
+			d.removeChild(to_delete);
+			to_delete = document.getElementById(action_value[selection.id][i].label);
+			d.removeChild(to_delete);
+		}
+		action_value[selection.id].splice(1, i);	
+	}
+	var div = document.getElementById(action_value[selection.id][0]);
+
+	switch(val) {
+	case "0": //port + max_len
+	console.log(val);
+	var textfield1 = document.createElement('input');
+
+	textfield1.className = "port";
+	textfield1.id = Date.now();
+	textfield1.name = "port";
+	var label1 = document.createElement("LABEL");
+	label1.htmlFor = textfield1.id;
+	label1.innerHTML = "port";
+	label1.id = Date.now()+1;
+	div.appendChild(label1);
+	div.appendChild(textfield1);
+	var input_label = {input: textfield1.id, label: label1.id};	
+	action_value[selection.id].push(input_label);
+
+	var textfield2 = document.createElement('input');
+	var label2 = document.createElement("LABEL");
+	textfield2.className = "max_len";
+	textfield2.id = Date.now()+2;
+	textfield2.name = "max_len";
+	label2.htmlFor = textfield1.id;
+	label2.innerHTML = "max length";
+	label2.id = Date.now()+3;
+	div.appendChild(label2);
+	div.appendChild(textfield2);
+	var input_label2 = {input: textfield2.id, label: label2.id};	
+	action_value[selection.id].push(input_label2);
+	console.log(action_value);
+	break;
+	case "22": //group_id
+		var textfield1 = document.createElement('input');
+		textfield1.className = "group_id";
+		textfield1.id = Date.now();
+		textfield1.name = "group_id";
+		var label1 = document.createElement("LABEL");
+		label1.htmlFor = textfield1.id;
+		label1.innerHTML = "group_id";
+		label1.id = Date.now()+1;
+		div.appendChild(label1);
+		div.appendChild(textfield1);
+		var input_label = {input: textfield1.id, label: label1.id};	
+		action_value[selection.id].push(input_label);
+		break;
+	case "21": //queue_id
+		var textfield1 = document.createElement('input');
+		textfield1.className = "queue_id";
+		textfield1.id = Date.now();
+		textfield1.name = "queue_id";
+		var label1 = document.createElement("LABEL");
+		label1.htmlFor = textfield1.id;
+		label1.innerHTML = "queue id";
+		label1.id = Date.now()+1;
+		div.appendChild(label1);
+		div.appendChild(textfield1);
+		var input_label = {input: textfield1.id, label: label1.id};	
+		action_value[selection.id].push(input_label);
+		break;
+	case "15": //mpls_ttl
+		var textfield1 = document.createElement('input');
+		textfield1.className = "mpls_ttl";
+		textfield1.id = Date.now();
+		textfield1.name = "mpls_ttl";
+		var label1 = document.createElement("LABEL");
+		label1.htmlFor = textfield1.id;
+		label1.innerHTML = "mpls ttl";
+		label1.id = Date.now()+1;
+		div.appendChild(label1);
+		div.appendChild(textfield1);
+		var input_label = {input: textfield1.id, label: label1.id};	
+		action_value[selection.id].push(input_label);
+		break;	
+	case "23": //nw_ttl
+		var textfield1 = document.createElement('input');
+		textfield1.className = "nw_ttl";
+		textfield1.id = Date.now();
+		textfield1.name = "nw_ttl";
+		var label1 = document.createElement("LABEL");
+		label1.htmlFor = textfield1.id;
+		label1.innerHTML = "new ttl";
+		label1.id = Date.now()+1;
+		div.appendChild(label1);
+		div.appendChild(textfield1);
+		var input_label = {input: textfield1.id, label: label1.id};	
+		action_value[selection.id].push(input_label);
+		break;
+	case "25": //SetField
+		var textfield1 = document.createElement('input');
+		textfield1.className = "field[4]";
+		textfield1.id = Date.now();
+		textfield1.name = "field[4]";
+
+		var select = document.createElement('select');
+		select.id = Date.now()+1;
+		select.className = "action_comboboxes";
+		var opt1 = document.createElement('option');
+		opt1.text = "Eth src";
+		opt1.value = "eth_src";
+		select.add(opt1, select[0]);
+
+		var opt2 = document.createElement('option');
+		opt2.text = "Eth dst";
+		opt2.value = "eth_dst";
+		select.add(opt2, select[1]);
+
+		var opt3 = document.createElement('option');
+		opt3.text = "VLAN ID";
+		opt3.value = "vlan_vid";
+		select.add(opt3, select[2]);
+		div.appendChild(select);
+		div.appendChild(textfield1);
+		select.options[0].selected = true;	
+		var input_label = {input: textfield1.id, label: select.id};	
+		action_value[selection.id].push(input_label);
+		break;
+	/*case "0xffff": //experimenter
+		var textfield1 = document.createElement('input');
+		textfield1.className = "experimenter";
+		textfield1.id = Date.now();
+		textfield1.name = "experimenter";
+		var label1 = document.createElement("LABEL");
+		label1.htmlFor = textfield1.id;
+		label1.innerHTML = "experimenter";
+		label1.id = Date.now()+1;
+		div.appendChild(label1);
+		div.appendChild(textfield1);
+		var input_label = {input: textfield1.id, label: label1.id};	
+		action_value[selection.id].push(input_label);
+		break;
+		*/
+	case "17": //ethertype
+	case "19":
+	case "20":
+	case "26":
+		var textfield1 = document.createElement('input');
+		textfield1.className = "ethertype"
+				textfield1.id = Date.now();
+		textfield1.name = "ethertype";
+		var label1 = document.createElement("LABEL");
+		label1.htmlFor = textfield1.id;
+		label1.innerHTML = "ethertype";
+		label1.id = Date.now()+1;
+		div.appendChild(label1);
+		div.appendChild(textfield1);
+		var input_label = {input: textfield1.id, label: label1.id};	
+		action_value[selection.id].push(input_label);
+		break;
+	case "11": //nic
+	case "12":
+	case "16":
+	case "18":
+	case "24":
+	case "27":
+		break;
+	case "sub_type=1":
+		var textfield1 = document.createElement('input');
+		textfield1.className = "bvci";
+		textfield1.id = "bvci" + Date.now();
+		textfield1.name = "bvci";
+		var label1 = document.createElement("LABEL");
+		label1.htmlFor = textfield1.id;
+		label1.innerHTML = "bvci";
+		label1.id = "bvci" + Date.now()+1;
+		div.appendChild(label1);
+		div.appendChild(textfield1);
+		var input_label = {input: textfield1.id, label: label1.id};	
+		action_value[selection.id].push(input_label);
+
+		var textfield2 = document.createElement('input');
+		textfield2.className = "tlli";
+		textfield2.id = "tlli" +Date.now();
+		textfield2.name = "tlli";
+		var label2 = document.createElement("LABEL");
+		label2.htmlFor = textfield2.id;
+		label2.innerHTML = "tlli";
+		label2.id = "tlli"+Date.now()+1;
+		div.appendChild(label2);
+		div.appendChild(textfield2);
+		var input_label = {input: textfield2.id, label: label2.id};	
+		action_value[selection.id].push(input_label);
+
+		var textfield3 = document.createElement('input');
+		textfield3.className = "sapi";
+		textfield3.id = "sapi" +Date.now();
+		textfield3.name = "sapi";
+		var label3 = document.createElement("LABEL");
+		label3.htmlFor = textfield3.id;
+		label3.innerHTML = "sapi";
+		label3.id = "sapi" +Date.now()+1;
+		div.appendChild(label3);
+		div.appendChild(textfield3);
+		var input_label = {input: textfield3.id, label: label3.id};	
+		action_value[selection.id].push(input_label);
+
+		var textfield4 = document.createElement('input');
+		textfield4.className = "nsapi";
+		textfield4.id = "nsapi"+Date.now();
+		textfield4.name = "nsapi";
+		var label4 = document.createElement("LABEL");
+		label4.htmlFor = textfield4.id;
+		label4.innerHTML = "nsapi";
+		label4.id = "nsapi"+Date.now()+1;
+		div.appendChild(label4);
+		div.appendChild(textfield4);
+		var input_label = {input: textfield4.id, label: label4.id};	
+		action_value[selection.id].push(input_label);
+
+		var textfield5 = document.createElement('input');
+		textfield5.className = "drx_param";
+		textfield5.id = "drx_param"+Date.now();
+		textfield5.name = "drx_param";
+		var label5 = document.createElement("LABEL");
+		label5.htmlFor = textfield5.id;
+		label5.innerHTML = "drx_param";
+		label5.id = "drx_param"+Date.now()+1;
+		div.appendChild(label5);
+		div.appendChild(textfield5);
+		var input_label = {input: textfield5.id, label: label5.id};	
+		action_value[selection.id].push(input_label);
+
+		var textfield6 = document.createElement('input');
+		textfield6.className = "imsi";
+		textfield6.id = "imsi"+Date.now();
+		textfield6.name = "imsi";
+		var label6 = document.createElement("LABEL");
+		label6.htmlFor = textfield6.id;
+		label6.innerHTML = "imsi";
+		label6.id = "imsi"+Date.now()+1;
+		div.appendChild(label6);
+		div.appendChild(textfield6);
+		var input_label = {input: textfield6.id, label: label6.id};	
+		action_value[selection.id].push(input_label);
+
+
+		break;
+	case "sub_type=3":
+		var textfield1 = document.createElement('input');
+		textfield1.className = "sa";
+		textfield1.id = "sa" + Date.now();
+		textfield1.name = "sa";
+		var label1 = document.createElement("LABEL");
+		label1.htmlFor = textfield1.id;
+		label1.innerHTML = "source IP";
+		label1.id = "sa" + Date.now()+1;
+		div.appendChild(label1);
+		div.appendChild(textfield1);
+		var input_label = {input: textfield1.id, label: label1.id};	
+		action_value[selection.id].push(input_label);
+
+		var textfield2 = document.createElement('input');
+		textfield2.className = "da";
+		textfield2.id = "da" +Date.now();
+		textfield2.name = "da";
+		var label2 = document.createElement("LABEL");
+		label2.htmlFor = textfield2.id;
+		label2.innerHTML = "destination IP";
+		label2.id = "da"+Date.now()+1;
+		div.appendChild(label2);
+		div.appendChild(textfield2);
+		input_label = {input: textfield2.id, label: label2.id};	
+		action_value[selection.id].push(input_label);
+
+		var textfield3 = document.createElement('input');
+		textfield3.className = "sp";
+		textfield3.id = "sp" +Date.now();
+		textfield3.name = "sp";
+		var label3 = document.createElement("LABEL");
+		label3.htmlFor = textfield3.id;
+		label3.innerHTML = "source port";
+		label3.id = "sp" +Date.now()+1;
+		div.appendChild(label3);
+		div.appendChild(textfield3);
+		input_label = {input: textfield3.id, label: label3.id};	
+		action_value[selection.id].push(input_label);
+
+		var textfield4 = document.createElement('input');
+		textfield4.className = "dp";
+		textfield4.id = "dp"+Date.now();
+		textfield4.name = "dp";
+		var label4 = document.createElement("LABEL");
+		label4.htmlFor = textfield4.id;
+		label4.innerHTML = "destination port";
+		label4.id = "dp"+Date.now()+1;
+		div.appendChild(label4);
+		div.appendChild(textfield4);
+		input_label = {input: textfield4.id, label: label4.id};	
+		action_value[selection.id].push(input_label);
+
+		break;
+	case "sub_type=2":
+	case "sub_type=4":
+		break;
+	}
+}
+
+function delete_act_div(btn){
+	var arr = btn.id.split("_");  
+	var sel_id = arr[1];
+	var divko = document.getElementById(action_value[sel_id][0]);
+	delete action_value[sel_id];
+	var parent = divko.parentNode;
+	parent.removeChild(divko);
+}
+
+function add_action() {
+	var act = document.getElementById("set_actions");
+	act_divko = document.createElement("div");
+	act_divko.id = "act"+Date.now();
+
+	var selection = document.createElement("select");
+	selection.setAttribute('onchange', "action_selected(this)");
+	selection.className="action_comboboxes";
+	selection.id = Date.now()+1;
+
+	var delete_btn = document.createElement("button");
+    delete_btn.innerHTML = "x";
+    act_divko.appendChild(delete_btn);
+
+	var arr = new Array();
+	arr.push(act_divko.id); //arr[0] je id act_divko
+	action_value[selection.id] = arr;				
+
+	delete_btn.id = "btn_"+selection.id;
+	delete_btn.onclick = function(){ delete_act_div(this); };
+
+	var opt0 = document.createElement("option");
+	opt0.text = "OFPAT_OUTPUT";
+	opt0.value = "0";
+	opt0.selected = "selected";
+	selection.add(opt0, selection[0]);
+	var opt1 = document.createElement("option");
+	opt1.text = "OFPAT_COPY_TTL_OUT";
+	opt1.value = "11";
+	opt1.selected = "selected";
+	selection.add(opt1, selection[1]);
+	var opt2 = document.createElement("option");
+	opt2.text = "OFPAT_COPY_TTL_IN";
+	opt2.value = "12";
+	opt2.selected = "selected";
+	selection.add(opt2, selection[2]);
+	var opt3 = document.createElement("option");
+	opt3.text = "OFPAT_SET_MPLS_TTL";
+	opt3.value = "15";
+	opt3.selected = "selected";
+	selection.add(opt3, selection[3]);
+	var opt4 = document.createElement("option");
+	opt4.text = "OFPAT_DEC_MPLS_TTL";
+	opt4.value = "16";
+	opt4.selected = "selected";
+	selection.add(opt4, selection[4]);
+	var opt5 = document.createElement("option");
+	opt5.text = "OFPAT_PUSH_VLAN";
+	opt5.value = "17";
+	opt5.selected = "selected";
+	selection.add(opt5, selection[5]);
+	var opt6 = document.createElement("option");
+	opt6.text = "OFPAT_POP_VLAN";
+	opt6.value = "18";
+	opt6.selected = "selected";
+	selection.add(opt6, selection[6]);
+	var opt7 = document.createElement("option");
+	opt7.text = "OFPAT_PUSH_MPLS";
+	opt7.value = "19";
+	opt7.selected = "selected";
+	selection.add(opt7, selection[7]);
+	var opt8 = document.createElement("option");
+	opt8.text = "OFPAT_POP_MPLS";
+	opt8.value = "20";
+	opt8.selected = "selected";
+	selection.add(opt8, selection[8]);
+	var opt9 = document.createElement("option");
+	opt9.text = "OFPAT_SET_QUEUE";
+	opt9.value = "21";
+	opt9.selected = "selected";
+	selection.add(opt9, selection[9]);
+	var opt10 = document.createElement("option");
+	opt10.text = "OFPAT_GROUP";
+	opt10.value = "22";
+	opt10.selected = "selected";
+	selection.add(opt10, selection[10]);
+	var opt11 = document.createElement("option");
+	opt11.text = "OFPAT_SET_NW_TTL";
+	opt11.value = "23";
+	opt11.selected = "selected";
+	selection.add(opt11, selection[11]);
+	var opt12 = document.createElement("option");
+	opt12.text = "OFPAT_DEC_NW_TTL";
+	opt12.value = "24";
+	opt12.selected = "selected";
+	selection.add(opt12, selection[12]);
+	var opt13 = document.createElement("option");
+	opt13.text = "OFPAT_SET_FIELD";
+	opt13.value = "25";
+	opt13.selected = "selected";
+	selection.add(opt13, selection[13]);
+	var opt14 = document.createElement("option");
+	opt14.text = "OFPAT_PUSH_PBB";
+	opt14.value = "26";
+	opt14.selected = "selected";
+	selection.add(opt14, selection[14]);
+	var opt15 = document.createElement("option");
+	opt15.text = "OFPAT_POP_PBB";
+	opt15.value = "27";
+	opt15.selected = "selected";
+	selection.add(opt15, selection[15]);
+	//var opt16 = document.createElement("option");
+	//opt16.text = "OFPAT_EXPERIMENTER";
+	//opt16.value = "0xffff";
+	//opt16.selected = "selected";
+	//selection.add(opt16, selection[16]);
+	var opt17 = document.createElement("option");
+	opt17.text = "PushGPRSNS";
+	opt17.value = "sub_type=1";
+	opt17.selected = "selected";
+	selection.add(opt17, selection[16]);
+	var opt18 = document.createElement("option");
+	opt18.text = "PopGPRSNS";
+	opt18.value = "sub_type=2";
+	opt18.selected = "selected";
+	selection.add(opt18, selection[17]);
+	var opt19 = document.createElement("option");
+	opt19.text = "PushUDPIP";
+	opt19.value = "sub_type=3";
+	opt19.selected = "selected";
+	selection.add(opt19, selection[18]);
+	var opt20 = document.createElement("option");
+	opt20.text = "PopUDPIP";
+	opt20.value = "sub_type=4";
+	opt20.selected = "selected";
+	selection.add(opt20, selection[19]);
+	var opt21 = document.createElement("option");
+	opt21.text = "-- select an option --";
+	opt21.disabled = true;
+	opt21.selected = true;
+	selection.add(opt21, selection[20]);
+
+	act_divko.appendChild(selection);
+	console.log('ADD_ACTION selection id=' +selection.id)
+	act.appendChild(act_divko);
+
+}	
+
+function inst_selected(selection) {
+	var val = selection.options[selection.selectedIndex].value;
+	console.log(inst_value);
+	if (inst_value[selection.id].length > 1) {
+		var d = document.getElementById(inst_value[selection.id][0]);
+		for (i=1; i<inst_value[selection.id].length; i++) {
+			var to_delete = document.getElementById(inst_value[selection.id][i].input);
+			d.removeChild(to_delete);
+			to_delete = document.getElementById(inst_value[selection.id][i].label);
+			d.removeChild(to_delete);
+
+		}
+		inst_value[selection.id].splice(1, i);	
+	}
+	var div = document.getElementById(inst_value[selection.id][0]);
+	switch(val) {
+	case "1":
+		var textfield1 = document.createElement('input');
+		textfield1.className = "table_id"
+				textfield1.id = Date.now();
+		textfield1.name = "table_id";
+		var label1 = document.createElement("LABEL");
+		label1.htmlFor = textfield1.id;
+		label1.innerHTML = "table id";
+		label1.id = Date.now()+1;
+		div.appendChild(label1);
+		div.appendChild(textfield1);
+		var input_label = {input: textfield1.id, label: label1.id};	
+		inst_value[selection.id].push(input_label);
+		break;
+	case "2":
+		var textfield1 = document.createElement('input');
+		textfield1.className = "metadata"
+				textfield1.id = Date.now();
+		textfield1.name = "metadata";
+		var label1 = document.createElement("LABEL");
+		label1.htmlFor = textfield1.id;
+		label1.innerHTML = "metadata";
+		label1.id = Date.now()+1;
+		div.appendChild(label1);
+		div.appendChild(textfield1);
+		var input_label = {input: textfield1.id, label: label1.id};	
+		inst_value[selection.id].push(input_label);
+
+		var textfield2 = document.createElement('input');
+		textfield2.className = "metadata_mask"
+				textfield2.id = Date.now()+2;
+		textfield2.name = "metadata_mask";
+		var label2 = document.createElement("LABEL");
+		label2.htmlFor = textfield2.id;
+		label2.innerHTML = "metadata mask";
+		label2.id = Date.now()+3;
+		div.appendChild(label2);
+		div.appendChild(textfield2);
+		var input_label = {input: textfield2.id, label: label2.id};	
+		inst_value[selection.id].push(input_label);
+		break;
+	case "3":
+	case "4":
+		/**	var textfield1 = document.createElement('input');
+							textfield1.className = "actions"
+							textfield1.id = Date.now();
+							textfield1.name = "actions";
+							var label1 = document.createElement("LABEL");
+							label1.htmlFor = textfield1.id;
+							label1.innerHTML = "actions";
+							label1.id = Date.now()+1;
+							div.appendChild(label1);
+							div.appendChild(textfield1);
+							var input_label = {input: textfield1.id, label: label1.id};	
+							inst_value[selection.id].push(input_label);
+		 **/
+		break;
+	case "5":	//nic zatial			
+		break;
+	case "6":
+		var textfield1 = document.createElement('input');
+		textfield1.className = "meter_id"
+				textfield1.id = Date.now();
+		textfield1.name = "meter_id";
+		var label1 = document.createElement("LABEL");
+		label1.htmlFor = textfield1.id;
+		label1.innerHTML = "meter id";
+		label1.id = Date.now()+1;
+		div.appendChild(label1);
+		div.appendChild(textfield1);
+		var input_label = {input: textfield1.id, label: label1.id};	
+		inst_value[selection.id].push(input_label);
+		break;
+	/*case "0xFFF":
+		var textfield1 = document.createElement('input');
+		textfield1.className = "experimenter"
+				textfield1.id = Date.now();
+		textfield1.name = "experimenter";
+		var label1 = document.createElement("LABEL");
+		label1.htmlFor = textfield1.id;
+		label1.innerHTML = "experimenter";
+		label1.id = Date.now()+1;
+		div.appendChild(label1);
+		div.appendChild(textfield1);
+		var input_label = {input: textfield1.id, label: label1.id};	
+		inst_value[selection.id].push(input_label);
+		break;
+	*/
+	}
+}  	
+
+function delete_inst_div(btn){
+	var arr = btn.id.split("_");  
+	var sel_id = arr[1];
+	var divko = document.getElementById(inst_value[sel_id][0]);
+	delete inst_value[sel_id];
+	var parent = divko.parentNode;
+	parent.removeChild(divko);
+}
+
+function add_instruction() {
+	var inst = document.getElementById("set_inst");
+	inst_divko = document.createElement("div");
+	inst_divko.id = "instruction"+Date.now()+1;
+
+	var selection = document.createElement("select");
+	selection.setAttribute('onchange', "inst_selected(this)");
+	selection.className="inst_comboboxes";
+	selection.id = Date.now()+2;
+
+	var arr = new Array();
+	arr.push(inst_divko.id); //arr[0] je id inst_divko
+	inst_value[selection.id] = arr;	
+	
+	var delete_btn = document.createElement("button");
+    delete_btn.innerHTML = "x";
+    inst_divko.appendChild(delete_btn);	
+    delete_btn.id = "btn_"+selection.id;
+	delete_btn.onclick = function(){ delete_inst_div(this); };		
+
+	var opt0 = document.createElement("option");
+	opt0.text = "OFPIT_GOTO_TABLE";
+	opt0.value = "1";
+	opt0.selected = "selected";
+	selection.add(opt0, selection[0]);
+	var opt1 = document.createElement("option");
+	opt1.text = "OFPIT_WRITE_METADATA";
+	opt1.value = "2";
+	opt1.selected = "selected";
+	selection.add(opt1, selection[1]);
+	var opt2 = document.createElement("option");
+	opt2.text = "OFPIT_WRITE_ACTIONS";
+	opt2.value = "3";
+	opt2.selected = "selected";
+	selection.add(opt2, selection[2]);
+	var opt3 = document.createElement("option");
+	opt3.text = "OFPIT_APPLY_ACTIONS";
+	opt3.value = "4";
+	opt3.selected = "selected";
+	selection.add(opt3, selection[3]);
+	var opt4 = document.createElement("option");
+	opt4.text = "OFPIT_CLEAR_ACTIONS";
+	opt4.value = "5";
+	opt4.selected = "selected";
+	selection.add(opt4, selection[4]);
+	var opt5 = document.createElement("option");
+	opt5.text = "OFPIT_METER";
+	opt5.value = "6";
+	opt5.selected = "selected";
+	selection.add(opt5, selection[5]);
+	//var opt6 = document.createElement("option");
+	//opt6.text = "OFPIT_EXPERIMENTER";
+	//opt6.value = "0xFFF";
+	//opt6.selected = "selected";
+	//selection.add(opt6, selection[6]);
+	var opt7 = document.createElement("option");
+	opt7.text = "-- select an option --";
+	opt7.disabled = true;
+	opt7.selected = true;
+	selection.add(opt7, selection[6]);
+
+	inst_divko.appendChild(selection);
+	inst.appendChild(inst_divko);
+}	
+
+function send_rest_call(url) {
+	var xmlhttp_call = new XMLHttpRequest();
+	xmlhttp_call.open("GET",url,"true");
+	xmlhttp_call.send();
+}	
+
+function clear_selections() {
+	for (var key in match_value) {
+		var selection = document.getElementById(key);
+		var d = document.getElementById(match_value[selection.id][0]);
+		if (match_value[selection.id][1] != 0) {
+			var to_delete = document.getElementById(match_value[selection.id][1]);
+			d.removeChild(to_delete);
+			match_value[selection.id][1] = 0;
+		}
+		//console.log('match div id ' + d.id);
+		//console.log('selection parent ' + selection.parentNode.id);
+		//d.removeChild(selection);
+		var parent = d.parentNode;
+		parent.removeChild(d);
+	}
+	match_value = [];
+	console.log(action_value);
+	for (var key in action_value) {
+		console.log("KEY from action vlaue " + key)
+		
+		var sel1 = document.getElementById(key);
+		console.log(action_value[sel1.id])
+		var d1 = document.getElementById(action_value[sel1.id][0]);
+		for (i=1; i<action_value[sel1.id].length; i++){
+			var input = document.getElementById(action_value[sel1.id][i].input);
+			d1.removeChild(input);
+			var label = document.getElementById(action_value[sel1.id][i].label);
+			d1.removeChild(label);
+		}
+		console.log('action div id ' + d1.id); 
+		console.log('sel1 parent ' + sel1.parentNode.id);
+		var sel_parent = document.getElementById(sel1.parentNode.id); 
+		//sel_parent.removeChild(sel1);
+		var parent = d1.parentNode;
+		parent.removeChild(d1);
+	}
+	action_value = [];
+
+	for (var key in inst_value) {
+		var sel2 = document.getElementById(key);
+		var d2 = document.getElementById(inst_value[key][0]);
+		for (i=1; i<inst_value[sel2.id].length; i++){
+			var input2 = document.getElementById(inst_value[sel2.id][i].input);
+			d2.removeChild(input2);
+			var label2 = document.getElementById(inst_value[sel2.id][i].label);
+			d2.removeChild(label2);
+		}
+		console.log('inst div id ' + d2.id);
+		console.log('inst sel parent ' + sel2.parentNode.id);
+		//d2.removeChild(sel2);
+		var parent = d2.parentNode;
+		parent.removeChild(d2);
+	}
+	inst_value = [];
+}		
+
+
+function submit_rules() {
+	var matches = [];
+	var actions = [];
+	var instructions = [];
+	for (var key in match_value) {
+		var selection = document.getElementById(key);
+		var mtch = selection.options[selection.selectedIndex].value;
+		if (mtch != "-- select an option --") {
+			if (document.getElementById(match_value[key][1]) != null) {
+				var val = document.getElementById(match_value[key][1]).value;
+				var ret = control_match_value(val, mtch);
+				if (ret == "incorrect") {
+					return;
+				}
+				matches.push(mtch + ret);
+			}
+			else {
+				matches.push(mtch);
+			}
+		}
+	}
+	for (var key in action_value) {
+		var selection1 = document.getElementById(key);	
+		var act = selection1.options[selection1.selectedIndex].value;
+		console.log("Selected: "+act);
+		if (act != "-- select an option --") {
+			if (action_value[selection1.id].length > 1){
+				var properties = [];
+				if(act == "25"){
+					console.log(action_value[selection1.id]);
+					var inp = document.getElementById(action_value[selection1.id][1].input);
+					var inp_val = inp.value;
+					var selection = document.getElementById(action_value[selection1.id][1].label);
+					var property  = selection.options[selection.selectedIndex].value;
+					//alert(property);
+					var ret = control_action_value(act, property, inp_val);
+					if (ret == "incorrect") {
+						return;
+					}
+					properties.push(ret);
+				}
+				else{
+					for (i=1; i<action_value[selection1.id].length; i++) {	
+						var inp = document.getElementById(action_value[selection1.id][i].input);
+						var inp_val = inp.value;
+						var aname  =inp.name;
+						var ret = control_action_value(act, aname, inp_val);
+						if (ret == "incorrect") {
+							return;
+						}
+						properties.push(ret);							
+					}
+				}	
+				if(act.length > 8){
+					var str = act.split("=");
+					console.log("Action " + str[1]);
+					act = get_action_subtype(str[1]);
+				}
+				else{
+					act = get_action(act);
+				}
+				var a ={
+						a_type: act,
+						properties: properties
+				};	
+				actions.push(a);						
+			}
+			else {
+				if(act.length > 8){
+					var str = act.split("=");
+					console.log("Action " + str[1]);
+					act = get_action_subtype(str[1]);
+				}
+				else{
+					act = get_action(act);
+				}
+				var a ={
+						a_type: act,
+						properties: []
+				};	
+				actions.push(a);
+			}
+		}
+	}
+	for (var key in inst_value) {
+		var selection2 = document.getElementById(key);
+		var inst = selection2.options[selection2.selectedIndex].value;
+		if (inst != "-- select an option --") {
+			if (inst_value[selection2.id].length > 1){
+				var prop = [];							
+				for (i=1; i<inst_value[selection2.id].length; i++) {
+					var inpi = document.getElementById(inst_value[selection2.id][i].input);
+					var inpi_val = inpi.value;
+					var iname  =inpi.name;
+					var ret = control_inst_value(inst, iname, inpi_val);
+					if (ret == "incorrect") {
+						return;
+					}								
+					prop.push(ret);
+
+				}
+				var ins = {
+						i_type: get_instruction(inst),
+						properties: prop
+				};	
+				instructions.push(ins);								
+			}
+			else {
+				var ins = {
+						i_type: get_instruction(inst),
+						properties: []
+				};
+				instructions.push(ins);			
+			}
+		}
+	}
+	var priority = document.getElementById("priority");
+	var table_id = document.getElementById("table_id");
+	var cookie = document.getElementById("cookie");
+	var title = $j( "#dialog" ).dialog( "option", "title" );
+	var f_id = title.split(" ");
+	if (priority.value == "") {
+		error_dialog("No priority value!");
+		return;
+	}				
+	else if (parseInt(priority.value) != parseInt(priority.value, 10)) {
+		error_dialog("Priority must be an integer!");
+
+		return;
+	}
+	if (table_id.value == "") {
+		error_dialog("No table ID!");
+
+		return;
+	}	
+	else if (parseInt(table_id.value) != parseInt(table_id.value, 10) && table_id.value.toUpperCase() != "MAC_TUNNEL_TABLE" 
+			&& table_id.value.toUpperCase() != "OF_GPRS_TABLE_IN" && table_id.value.toUpperCase() != "OF_GPRS_TABLE") {
+		error_dialog("Table ID must be an integer!");
+		return;
+	}
+
+
+
+	var flow = {
+			id: parseInt(f_id[1]),
+			table_id: table_id.value.toUpperCase(),
+			priority: priority.value,
+			inst: instructions,
+			actions: actions,
+			matches: matches,
+			cookie: cookie.value
+	};
+	var flow_json = JSON.stringify(flow, 1);
+	//alert(flow_json);
+	var flowHTTP=new XMLHttpRequest();
+	flowHTTP.open("GET","http://localhost:8080/add_flow/"+flow_json,"true");
+	flowHTTP.send();
+	load_oftable(parseInt(f_id[1]));
+	clear_selections();
+	add_rule();
+	add_instruction();
+	add_action();
+	
+}
+
+
+
+function xread_ports() {
+	var data_stats=this.responseText; 
+	json_ports = JSON.parse(data_stats);
+	console.log('LOAD');
+	console.log(json_ports);
+}						
+
+
+function load_ports() {
+	var xmlhttp_stats1 = new XMLHttpRequest();
+	var xmlhttp_stats2 = new XMLHttpRequest();
+	xmlhttp_stats1.open("GET","http://localhost:8080/dump_port_stats","true");
+	xmlhttp_stats1.send();
+	xmlhttp_stats2.open("GET","http://localhost:8080/dump_port_stats","true");
+	xmlhttp_stats2.onload = xread_ports;
+	xmlhttp_stats2.send();			
+}
+
+function error_dialog(message){
+	$j('<div></div>').appendTo('body')
+	.html('<div><h6>'+message+'</h6></div>')
+	.dialog({
+		modal: true,  title: "Error", zIndex: 10000, autoOpen: true,
+		width: 200, resizable: false,
+		buttons: {
+		OK: function () {
+		$j(this).dialog("close");
+	}
+	},
+	close: function (event, ui) {
+		$j(this).remove();
+	}
+	});
+}
+
+function control_action_value(action, prop, val) {
+	switch(action) {
+	case "0": //port + max_len
+		switch(prop) {
+		case "port": //overit ci port existuje
+
+			var title = $j( "#dialog" ).dialog( "option", "title" );
+			var f_id = title.split(" ");
+			var found = false;
+			console.log(json_ports);
+			for (var j=0; j<json_ports[parseInt(f_id[1])].length; j++){
+				var port_number = parseInt(json_ports[parseInt(f_id[1])][j].port_no);
+				if (port_number == parseInt(val, 10)){
+					found = true;
+				}
+			}
+			if(found == true){
+				return prop +"="+ "int('" + val.toString() + "')";
+			}
+			else{
+
+				error_dialog("Port does not exist!");
+				return "incorrect";
+			}
+
+			break;
+		case "max_len":
+			if (parseInt(val) === parseInt(val, 10)) {
+				return prop +"="+ "int('" + val.toString() + "')";
+			}
+			else{
+				error_dialog("Not an integer!");
+				return "incorrect";
+			}
+			break;		
+		}
+		break;
+	case "22": //group_id
+	case "21": //queue_id
+	case "15": //mpls_ttl
+	case "23": //nw_ttl
+		if (parseInt(val) === parseInt(val, 10)) {
+			return prop +"="+ "int('" + val.toString() + "')";
+		}
+		else{
+			error_dialog("Not an integer!");
+			return "incorrect";
+		}
+		break;
+	case "25": //field[4]
+		switch(prop){
+		case "eth_src":
+		case "eth_dst":
+			//kontrola ci je to MAC
+			if ( checkIsMAC(val)) {
+				return prop +"='"+val.toLowerCase()+"'";
+			}
+			else {
+				error_dialog("Incorrect address format!");
+				return "incorrect";
+			}
+			break;
+		case "vlan_vid":
+			if (parseInt(val) === parseInt(val, 10)) {
+				return prop +"="+ "int('" + val.toString() + "')";
+			}
+			else{
+				error_dialog("Not an integer!");
+				return "incorrect";
+			}
+			//kontrola ci je to integer alebo hexa....zistit ktory tvar poslat na controller
+			break;		
+		}
+
+	/*case "0xffff": //experimenter
+		return prop+"=int('"+val+"')";
+		break;
+		*/
+	case "17": //ethertype
+		if(parseInt(val, 16)==0x8100 || parseInt(val, 16)==0x8847 || parseInt(val, 16)==0x8848){
+			return prop +"="+ "int('" + val + "', 16)";		
+		}
+		error_dialog("Incorrect ethertype! \nValid values: 0x8100, 0x8847, 0x8848.");
+		return "incorrect";
+		break;
+	case "19":
+	case "20":
+	case "26":
+		if (val[0]=="0" && val[1]=="x") {  //je to hexa
+			/**if (parseInt(val, 16) <= 0x0600) {
+								alert("Value <= 0x0600 cannot be ethertype!");
+								return "incorrect";
+							}**/
+			//else if(parseInt(val, 16)==0x0800 || parseInt(val, 16)==0x0806 || parseInt(val, 16)==0x86DD){
+			return prop +"="+ "int('" + val + "', 16)";		
+			//}
+		}
+		else { //neni to hexa
+			error_dialog('Please use hexadecimal values!')
+			//if (parseInt(val, 10) == 2048 || parseInt(val, 10) == 2054 || parseInt(val, 10) == 34525){
+			//		return prop+"="+val.toString();
+			//}
+		}
+
+		//alert("Not an ethertype");
+		return "incorrect";
+		break;
+	case "11": //nic
+	case "12":
+	case "16":
+	case "18":
+	case "24":
+	case "27":
+		return prop +"="+ "int('" + val.toString() + "')";
+		break;
+	case "sub_type=1":
+		switch(prop){
+		case "bvci":
+		case "sapi":
+		case "nsapi":
+		case "drx_param":	
+			if (parseInt(val) === parseInt(val, 10)) {
+			return prop +"=" + val;	
+			}
+			else{
+			 error_dialog("Not an integer!");
+			 return "incorrect";
+			}
+			
+			break;
+		case "tlli":
+			if (val[0]=="0" && val[1]=="x") {
+			return prop +"=" + val;	
+
+			}
+			else{
+			error_dialog("Not hexadecimal value!");
+			return "incorrect";
+			}
+			
+			
+			break;
+		case "imsi":
+			for(i=0; i<val.length; i++){
+				if(!(parseInt(val[i]) === parseInt(val[i], 10))){
+					error_dialog("Only characters <0,9> are valid!");
+					return "incorrect";
+				}
+			}
+			return prop+"='"+val+"'";
+		}
+		//bvci, tlli, sapi, nsapi, drx_param, imsi
+		break;
+	case "sub_type=3":
+		switch(prop){
+		case "sa":
+		case "da":
+			if ( checkIsIPV4(val)) {
+				return prop+"='"+val+"'";
+			}
+			else {
+				error_dialog("Incorrect address format!");
+				return "incorrect";
+			}
+			break;
+		case "sp":
+		case "dp":
+			if (parseInt(val) === parseInt(val, 10)) {
+				return prop +"="+ "int('" + val.toString() + "')";
+			}
+			else{
+				error_dialog("Not an integer!");
+				return "incorrect";
+			}
+			break;
+		}
+
+		//sa=VGSN_IP, da=BSS_IP, sp=VGSN_PORT, dp=BSS_PORT
+		break;
+	case "sub_type=2":
+
+		break;
+	case "sub_type=4":
+
+		break;
+	}
+
+}
+
+function control_inst_value(inst, prop, val) {
+	var actions = load_actions();
+	switch(inst) {
+	case "1":
+		if (parseInt(val) === parseInt(val, 10)) {
+			return prop+"="+val;
+		}
+		else{
+			error_dialog("Not an integer!");
+			return "incorrect";
+		}
+
+		break;
+	case "2":
+		switch(prop) {
+		case "metadata":
+		case "metadata_mask":
+			if (parseInt(val) === parseInt(val, 10)) {
+				return prop+"="+val;
+			}
+			else{
+				error_dialog("Not an integer!");
+				return "incorrect";
+			}
+
+		}
+		break;
+	case "3":
+	case "4":
+		if (actions[val] != undefined) {
+			console.log(actions[val]);
+			return prop+"="+val;
+		}
+		else {
+			for (var key in actions) {
+				if (actions[key].toUpperCase() == val.toUpperCase()){
+					return prop+"="+key;
+				}
+			}
+			error_dialog("Not a valid action!");
+			return "incorrect";
+		}
+		break;
+	case "6":
+		if (parseInt(val) === parseInt(val, 10)) {
+			return prop+"="+val;
+		}
+		else{
+			error_dialog("Not an integer!");
+			return "incorrect";
+		}
+		break;
+	case "0xFFF":
+		return prop+"="+val;
+		break;
+	}
+}
+
+function control_match_value(val, mtch){
+	switch(mtch) {
+	case "arp_op=":
+		if (parseInt(val)==1 || parseInt(val)==2){			 
+			return val;					 
+		}  
+		else if(val.toUpperCase() === "REPLY"){ 			
+			return "int('2')";
+		}
+		else if (val.toUpperCase() === "REQUEST") {
+			return "int('1')";
+		}
+		else{
+			error_dialog("Incorrect data!");
+			return "incorrect";
+		}				
+		break;
+	case "eth_src=":
+	case "eth_dst=":
+	case "arp_sha=":
+	case "arp_tha=":
+		if ( checkIsMAC(val)) {
+			return "'"+val.toLowerCase()+"'";
+		}
+		else {
+			error_dialog("Incorrect address format!");
+			return "incorrect";
+		}
+
+		break;
+	case "ipv4_src=":
+	case "ipv4_dst=":
+	case "arp_tpa=":
+	case "arp_spa=":
+		if ( checkIsIPV4(val)) {
+			return "'"+val+"'";
+		}
+		else {
+			error_dialog("Incorrect address format!");
+			return "incorrect";
+		}
+
+		break;
+	case "ipv6_src=":
+	case "ipv6_dst=":
+		if ( checkIsIPV6(val)) {
+			return "'"+val.toLowerCase()+"'";
+		}
+		else {
+			error_dialog("Incorrect address format!");
+			return "incorrect";
+		}
+		break;
+	case "icmpv6_code=":
+	case "icmpv6_type=":
+	case "icmpv4_code="://(parseInt(val) === parseInt(data, 10))
+	case "icmpv4_type=":
+		if (parseInt(val) === parseInt(val, 10)) {
+			return "int('" + val.toString() + "')";
+		}
+		else{
+			error_dialog("Not an integer!");
+			return "incorrect";
+		}
+
+		break;
+	case "tcp_dst=":
+	case "tcp_src=":
+		//var port_num = [7, 19, 20, 21, 22, 23, 25, 53, 79, 80, 110, 111, 119, 139, 143, 179, 389, 443, 445, 1080];
+		//	var port_name = ["echo", "chargen", "ftp-data", "ftp-control", "ssh", "telnet", "smtp", "domain", "finger", "http", "pop3", "sunrpc", "nntp", "netbios-ssn", "imap", "bgp",
+		// "ldap", "https", "microsoft-ds", "socks"];
+		//for (i=0; i<port_num.length; i++) {
+		//if (parseInt(val) == port_num[i]) {
+		//return "int('" + val.toString() + "')";
+		//}
+		//}
+		//for (i=0; i<port_name.length; i++) {
+		//if (val.toLowerCase() == port_name[i]) {
+		//return "int('" + port_num[i] + "')";
+		//}
+		//}
+
+		if (parseInt(val) === parseInt(val, 10)) {
+			return "int('" + val.toString() + "')";
+		}
+		else{
+			error_dialog("Not an integer!");
+			return "incorrect";
+		}
+		break;
+	case "udp_dst=":
+	case "udp_src=":
+		/**var port_num = [7, 19, 37, 53, 67, 68, 69, 137, 138, 161, 162, 500, 514, 520, 33434];
+						var port_name = ["echo", "chargen", "time", "domain", "bootps", "bootpc", "tftp", "netbios-ns", "netbios-dgm", "snmp", "snmp-trap", "isakmp", "syslog", "rip", "traceroute"];
+							for (i=0; i<port_num.length; i++) {
+								if (parseInt(val) == port_num[i]) {
+									return "int('" + val.toString() + "')";
+								}
+							}
+							for (i=0; i<port_name.length; i++) {
+								if (val.toLowerCase() == port_name[i]) {
+									return "int('" + port_num[i] + "')";
+								}
+							} **/
+		if (parseInt(val) === parseInt(val, 10)) {
+			return "int('" + val.toString() + "')";
+		}
+		else{
+			error_dialog("Not an integer!");
+			return "incorrect";
+		}
+		break;
+	case "llc_sapi=":
+	case "ns_bvci=":
+		if (parseInt(val) === parseInt(val, 10) && parseInt(val)<=65535 && parseInt(val)>=0){
+			return "int('" + val.toString() + "')";
+		}
+		else if (parseInt(val) === parseInt(val, 10) && parseInt(val)>65535){
+			error_dialog("Value over 2B!");
+			return "incorrect";
+		}
+		else {
+			error_dialog("Data is not correct!");
+			return "incorrect";
+		}
+	case "sndcp_nsapi=":
+		if (parseInt(val) === parseInt(val, 10) && parseInt(val) >=0 && parseInt(val) <=15) {
+			return "int('" + val.toString() + "')";
+		}
+		else{
+			error_dialog("Not an integer!");
+			return "incorrect";
+		}
+		break;
+	case "sndcp_first_segment=":
+	case "sndcp_more_segments=":
+		if (parseInt(val) == 1 || parseInt(val) == 0) {
+			return "int('" + val.toString() + "')";
+		}
+		else{
+			error_dialog("Value not an integer in range <0,1>!");
+			return "incorrect";
+		}
+		break;
+	case "bgssgp_tlli=":
+
+		if (val[0]=="0" && val[1]=="x") {
+			if (val.length != 10) {
+				error_dialog("Wrong length! 4 bytes needed!");
+				return "incorrect";
+			}
+			for (i=2; i<val.length; i++) {
+				if (parseInt(val[i], 16) >=0 && parseInt(val[i], 16)<=15) {
+
+				}
+				else {
+					error_dialog("Not a valid hexadecimal number!");
+					return "incorrect";
+				}
+			}
+			return "int('" + val.toString() + "')";
+		}
+		else {
+			if (val.length != 8) {
+				error_dialog("Wrong length! Max 4 bytes!");
+				return "incorrect";
+			}
+			for (i=0; i<val.length; i++) {
+				if (parseInt(val[i], 16) >=0 && parseInt(val[i], 16)<=15) {
+
+				}
+				else {
+					error_dialog("Not a hexadecimal number!");
+					return "incorrect";
+				}
+			}
+			return "int('0x" + val.toString() + "')";
+		}	
+
+		break;
+	//case "tunnel_id=":
+		//if ( checkIsMAC(val)) {
+			//return "'"+val.toLowerCase()+"'";
+		//}
+		//else {
+			//error_dialog("Incorrect address format!");
+			//return "incorrect";
+		//}
+		//break;
+	case "ns_type=":
+		return "int('" + val.toString() + "')";
+		break;
+	}
+}
+
+function checkIsIPV4(entry) {
+	var blocks = entry.split(".");
+	if(blocks.length === 4) {
+		return blocks.every(function(block) {
+			return parseInt(block,10) >=0 && parseInt(block,10) <= 255;
+		});
+	}
+	return false;
+}
+
+function checkIsIPV6(entry) {
+	var blocks = entry.split(":");
+	if(blocks.length === 8) {
+		return blocks.every(function(block) {
+			return parseInt(block,16) >=0 && parseInt(block,16) <= 65535 && block.length == 4;
+		});
+	}
+	return false;
+}
+
+function checkIsMAC(entry) {
+	var blocks = entry.split(":");
+	if(blocks.length === 6) {
+		return blocks.every(function(block) {
+			return parseInt(block,16) >=0 && parseInt(block,16) <= 255 && block.length == 2;
+		});
+	}
+	return false;
+}
+
+//****************************************** TUNNELS **************************************
+
+var  tunnel_list = [];					 
+var ACTIVE_TUNNELS = [];
+
+function show_tunnels (TUNNEL) {
+	select_edges(TUNNEL);
+}					 
+
+function xread_tunnels() {
+	var tunnels=this.responseText; 
+	var Tjson = JSON.parse(tunnels);
+	create_tunnel_table(Tjson, true);
+}
+
+function xread_tunnels_refresh() {
+	var tunnels=this.responseText; 
+	var Tjson = JSON.parse(tunnels);
+	create_tunnel_table(Tjson, false);
+}
+
+function create_tunnel_table(Tjson, control){
+
+	ACTIVE_TUNNELS = [];
+	var Tunnel_table = document.getElementById("Tunnel_table");
+	var row, cell;
+
+	if(control==true){
+		// Declare variables and create the header, footer, and caption.
+		var THead = Tunnel_table.createTHead();
+		var caption = Tunnel_table.createCaption();
+		var heading = new Array();
+		heading[0] = "APN";
+		heading[1] = "BSS";
+		heading[2] = "TID_IN";
+		heading[3] = "TID_OUT";
+		heading[4] = "PATH_IN";
+
+		//caption.innerHTML = "Table " + json.tables[table_index].id;
+		// Insert a row into the header.
+		row = THead.insertRow(-1);
+		THead.setAttribute("bgColor","#EEEEEE");
+
+		// Insert cells into the header row.
+		for (i=0; i<heading.length; i++)
+		{
+			cell = row.insertCell(i);
+			cell.align = "center";
+			cell.style.fontWeight = "bold";
+			cell.innerHTML = heading[i];
+		}
+
+
+		var tbody = document.createElement('tbody');
+		tbody.className = "tun_tablebody";
+		populate_tuntab_rows(tbody, Tjson, row, cell);
+		Tunnel_table.appendChild(tbody);
+	}
+	else{
+		var old_tbody = document.getElementsByClassName("tun_tablebody");
+		console.log(old_tbody[0]);
+		var new_tbody = document.createElement('tbody');
+		new_tbody.className = "tun_tablebody";
+		populate_tuntab_rows(new_tbody, Tjson, row, cell);
+		Tunnel_table.removeChild(old_tbody[0]);
+		Tunnel_table.appendChild(new_tbody);
+	}
+
+}
+
+function populate_tuntab_rows(tbody, Tjson, row, cell){
+	for (i=0; i<Tjson.length; i++) {
+		row = tbody.insertRow(-1); 
+		row.setAttribute("bgColor","#EEEEEE");
+		row.id = Math.random();
+		cell = row.insertCell(0);
+		cell.innerHTML = "eth_addr="+Tjson[i].apn.eth_addr + "<BR/>ip_addr=" + Tjson[i].apn.ip_addr + "<BR/>name=" + Tjson[i].apn.name;	
+		APN_NAMES[Tjson[i].apn.name.toLowerCase()]= true;	
+		APN_IPs[Tjson[i].apn.ip_addr]=true;				
+		cell = row.insertCell(1);							
+		cell.innerHTML = Tjson[i].bss;
+		cell = row.insertCell(2); 
+		cell.innerHTML = Tjson[i].tid_in;					
+		cell = row.insertCell(3); 
+		cell.innerHTML = Tjson[i].tid_out;	
+		var input = "";
+		cell = row.insertCell(4); 
+		for (j=0; j<Tjson[i].path_in.length; j++) {	 								      
+			input = input + "dpid="+Tjson[i].path_in[j].dpid +", port_out=" + Tjson[i].path_in[j].port_out + "<BR/>";   						  					
+		}
+		for (j=0; j<Tjson[i].path_in.length-1; j++) {
+			for (t=0; t<EDGES.length; t++){										
+				if ((EDGES[t].from == Tjson[i].path_in[j].dpid &&  EDGES[t].to == Tjson[i].path_in[j+1].dpid) || (EDGES[t].to == Tjson[i].path_in[j].dpid && EDGES[t].from == Tjson[i].path_in[j+1].dpid)) {		
+					var desc	= 	Tjson[i].apn.name + " --> " + input + " --> " + Tjson[i].bss;						
+					EDGES[t].tunnels.push(desc);
+				}
+			}
+		}
+
+		cell.innerHTML = input;	
+
+		var path = [];
+		path.push(Tjson[i].apn.name);
+
+		var x = Math.random();
+
+		var ID = i+1;
+		var L2 = [];
+		var L3=[];
+		var L1 = input.split("<BR/>");
+		for (k=0; k<L1.length-1; k++) {
+			L2=L1[k].split(",");
+			L3 = L2[0].split("=");
+			path.push(L3[1]);
+		}
+		path.push(Tjson[i].bss);
+
+		var TUNNEL = {
+				tun_path: path,
+				id: x.toString(),
+				row_id: row.id
+		};
+		console.log("index=" + ID);
+		ACTIVE_TUNNELS.push(TUNNEL);
+
+		tunnel_list.push(path);
+
+	}
+}
+
+//***********************************************  PDP *****************************************
+
+function xread_pdp() {
+	var data_pdp=this.responseText; 
+	var json_pdp = JSON.parse(data_pdp);
+	create_pdp_table(json_pdp);;
+}
+
+function xread_pdp_refresh() {
+	var data_pdp=this.responseText; 
+	var json_pdp = JSON.parse(data_pdp);
+	refresh_pdp_table(json_pdp);
+}
+
+function load_active_pdp(control) {
+	var xmlhttp_pdp = new XMLHttpRequest();
+	xmlhttp_pdp.open("GET","http://localhost:8080/gprs/pdp_dump","true");
+	if(control==true){
+		xmlhttp_pdp.onload = xread_pdp;
+	}
+	else{
+		xmlhttp_pdp.onload = xread_pdp_refresh;
+	}
+	xmlhttp_pdp.send();
+}		
+
+function create_pdp_table(json_pdp){
+	var table = document.getElementById("pdpTable");
+	var head = table.createTHead();
+	var oRow, oCell;
+	var i, j; 
+
+	var heading = new Array();
+	heading[0] = "BVCI";
+	heading[1] = "TLLI";
+	heading[2] = "SAPI";
+	heading[3] = "NSAPI";
+	heading[4] = "TID_OUT";
+	heading[5] = "TID_IN";
+	heading[6] = "CLIENT IP";
+	heading[7] = "IMSI";
+	heading[8] = "DRX_PARAM";
+
+	// Insert a row into the header.
+	oRow = head.insertRow(-1);
+	head.setAttribute("bgColor","#EEEEEE");
+
+	// Insert cells into the header row.
+	for (i=0; i<heading.length; i++)
+	{
+		oCell = oRow.insertCell(i);
+		oCell.align = "center";
+		oCell.style.fontWeight = "bold";
+		oCell.innerHTML = heading[i];
+	}
+
+	// Insert rows and cells into bodies.
+	var tbody = document.createElement('tbody');
+	tbody.className = "pdp_tablebody";
+	populate_with_new_rows(table, json_pdp, oRow, oCell);
+	table.appendChild(tbody);					
+}
+
+function populate_with_new_rows(tbody, json_pdp, oRow, oCell){
+	for (i=0; i<json_pdp.context_array.length; i++)
+	{
+		oRow = tbody.insertRow(-1);  //riadok pre flow
+		oRow.setAttribute("bgColor","#EEEEEE");
+		oCell = oRow.insertCell(0); 
+		oCell.innerHTML = json_pdp.context_array[i].bvci;
+		oCell = oRow.insertCell(1); 
+		oCell.innerHTML = json_pdp.context_array[i].tlli;
+		oCell = oRow.insertCell(2); 
+		oCell.innerHTML = json_pdp.context_array[i].sapi;
+		oCell = oRow.insertCell(3); 
+		oCell.innerHTML = json_pdp.context_array[i].nsapi;
+		oCell = oRow.insertCell(4); 
+		oCell.innerHTML = json_pdp.context_array[i].tid_out;
+		oCell = oRow.insertCell(5); 
+		oCell.innerHTML = json_pdp.context_array[i].tid_in;
+		oCell = oRow.insertCell(6); 
+		oCell.innerHTML = json_pdp.context_array[i].client_ip;
+		oCell = oRow.insertCell(7); 
+		oCell.innerHTML = json_pdp.context_array[i].imsi;
+		oCell = oRow.insertCell(8); 
+		oCell.innerHTML = json_pdp.context_array[i].drx_param;							
+	}
+}
+
+function refresh_pdp_table(json_pdp){
+	var table = document.getElementById("pdpTable");
+	var oRow, oCell;
+	var old_tbody = document.getElementsByClassName("pdp_tablebody");
+
+	console.log(old_tbody[0]);
+	var new_tbody = document.createElement('tbody');
+	new_tbody.className = "pdp_tablebody";
+	populate_with_new_rows(new_tbody, json_pdp, oRow, oCell);
+	table.removeChild(old_tbody[0]);
+	table.appendChild(new_tbody);
+}
+
+//**************************************  STATISTIC GRAPHS **************************
+var old_port_data;
+var old_flow_data;
+var port_stats_data = new Array; 
+var port_stats_dict = ["rx_packets", "tx_packets", "rx_bytes", "tx_bytes", "rx_dropped", "tx_dropped","rx_errors","tx_errors", "rx_frame_err", 
+                       "rx_over_err", "rx_crc_err", "collisions", "duration_sec", "duration_nsec"];
+
+var flow_stats_data = new Array();                 	
+var table_cbx = new Array();
+var FlowGroupsSet = new Array();					
+
+function switch_port_stats(selection) {		
+	var val=selection.options[selection.selectedIndex].value;
+	var fwd_stat = document.getElementById("fwd_num_cb");
+	var fwd_stat_val = fwd_stat.options[fwd_stat.selectedIndex].value;
+	var graph = document.getElementById("graph"+fwd_stat_val.toString()+"_"+val);
+	$j(document).ready(function(){
+		$j('.graph').hide();
+		$j('#'+graph.id).show();
+	});
+}	
+
+function switch_fwd_stats(selection) {
+	var val=selection.options[selection.selectedIndex].value;
+	var sel_stat = document.getElementById("port_statistic_cb");
+	var sel_stat_val = sel_stat.options[sel_stat.selectedIndex].value;
+	var graph = document.getElementById("graph"+val.toString()+"_"+sel_stat_val);
+	$j(document).ready(function(){
+		$j('.graph').hide();
+		$j('#'+graph.id).show();
+	});
+}	
+
+function switch_fwd_flow(selection) {
+
+	var val=selection.options[selection.selectedIndex].value;
+	//console.log("val=" + val);
+	var sel_tab = document.getElementById("sel_"+val.toString());
+	$j(document).ready(function(){
+		$j('.flow_fwd_tables').hide();
+		$j('#'+"sel_"+val).show();
+	});
+	if(sel_tab != undefined){
+		var sel_tab_val = sel_tab.options[sel_tab.selectedIndex].value;
+		var sel_stat = document.getElementById("flow_statistic_cb");
+		var sel_stat_val = sel_stat.options[sel_stat.selectedIndex].value;
+		var graph = document.getElementById("graph"+val.toString()+"_"+sel_tab_val + "_" +  sel_stat_val);
+		//console.log("graph"+val.toString()+"_"+sel_tab_val + "_" +  sel_stat_val);
+		$j(document).ready(function(){
+			$j('.flow_graph').hide();
+			$j('#'+graph.id).show();
+			$j('.legend_table').hide();
+			$j('#legend_'+graph.id).show();
+		});
+	}
+	else{
+		error_dialog("Fowrarder has no graph");
+	}
+
+}
+
+function switch_flow_stats(selection) {
+	var val=selection.options[selection.selectedIndex].value;
+	var fwd_stat = document.getElementById("flow_fwd_cb");
+	var fwd_stat_val = fwd_stat.options[fwd_stat.selectedIndex].value;
+	var sel_tab = document.getElementById("sel_"+fwd_stat_val.toString());
+	var sel_tab_val = sel_tab.options[sel_tab.selectedIndex].value;
+	var graph = document.getElementById("graph"+fwd_stat_val.toString()+"_"+sel_tab_val + "_" + val);
+	//console.log("graph"+fwd_stat_val.toString()+"_"+sel_tab_val + "_" + val);
+	$j(document).ready(function(){
+		$j('.flow_graph').hide();
+		$j('#'+graph.id).show();
+		$j('.legend_table').hide();
+		$j('#legend_'+graph.id).show();
+	});
+}
+
+function switch_flow_tabs(selection){
+	var val=selection.options[selection.selectedIndex].value;
+	var fwd_stat = document.getElementById("flow_fwd_cb");
+	var fwd_stat_val = fwd_stat.options[fwd_stat.selectedIndex].value;
+	var sel_stat = document.getElementById("flow_statistic_cb");
+	var sel_stat_val = sel_stat.options[sel_stat.selectedIndex].value;
+	var graph = document.getElementById("graph"+fwd_stat_val.toString()+"_"+val.toString() + "_" + sel_stat_val);
+	//console.log("graph"+fwd_stat_val.toString()+"_"+val.toString() + "_" + sel_stat_val);
+	$j(document).ready(function(){
+		$j('.flow_graph').hide();
+		$j('#'+graph.id).show();
+		$j('.legend_table').hide();
+		$j('#legend_'+graph.id).show();
+	});
+}
+
+function get_date(){
+	var currentdate = new Date(); 
+	var year = currentdate.getFullYear();
+	var month = (currentdate.getMonth()+1);
+	if (month < 10) {
+		month = 0+month;
+	}
+	var day = currentdate.getDate();	
+	if (day < 10) {
+		day = 0+day;
+	}			 
+	var time  =  currentdate.getHours() + ":"  + currentdate.getMinutes();	
+	var datetime = year+"-"+month+"-"+day+" "+time;	
+	return datetime;
+}
+//*******************  FLOW STATISTICS ***********************************************
+
+
+function load_flow_stats(){
+	var xmlhttp_stats1 = new XMLHttpRequest();
+	var xmlhttp_stats2 = new XMLHttpRequest();
+	xmlhttp_stats1.open("GET","http://localhost:8080/dump_flow_stats","true");
+	xmlhttp_stats1.send();
+	xmlhttp_stats2.open("GET","http://localhost:8080/dump_flow_stats","true");
+	xmlhttp_stats2.onload = xread_flow_stats;
+	xmlhttp_stats2.send();
+}		
+
+function xread_flow_stats(){
+	var data_stats=this.responseText; 
+	var json_stats = JSON.parse(data_stats);
+	update_flow_graph(json_stats);
+}
+
+function initialize_flow_graph(json_stats){
+	//console.log("Flow stats");
+	//console.log(json_stats);
+	var datetime = get_date();		
+	var pom = 0;
+	for(i=0; i<dataset.nodes.length; i++){
+
+		if(isNaN(dataset.nodes[i].id)){
+
+		}
+		else{
+			var sel = document.getElementById("flow_fwd_cb");
+			var opt = document.createElement("option");
+			opt.text = "Forwarder "+dataset.nodes[i].id;
+			opt.value = dataset.nodes[i].id;
+			opt.selected = "selected";
+			sel.add(opt, sel[pom]);
+			pom++;
+			if(json_stats[dataset.nodes[i].id].length > 0){
+				var tables = new Array();
+				var select = document.createElement("select");
+				select.id = "sel_"+dataset.nodes[i].id.toString();
+				select.setAttribute('onchange', "switch_flow_tabs(this)"); 
+				//console.log("select_table od = " + select.id)
+				select.className = "flow_fwd_tables";
+				var count=0;
+				for (l=0; l< json_stats[dataset.nodes[i].id].length; l++){
+					var t_id = json_stats[dataset.nodes[i].id][l].table_id;
+					if(tables[t_id] == null){
+						var option = document.createElement("option");
+						option.id = "opt_" + dataset.nodes[i].id.toString() + "_" + t_id;
+						option.text = "Table " + t_id;
+						//console.log("option id = " + option.id)
+						option.value = t_id;
+						select.add(option, select[count]);
+						count++;
+						tables[t_id] = 1;
+					}
+				}
+				var div = document.getElementById("flow_stats_menu");
+				select.options[0].selected = true;
+				div.appendChild(select);
+			}
+
+			var stat_types = ["packet_count", "byte_count"];
+			for(j=0; j<stat_types.length; j++){
+				for (f=0; f<json_stats[dataset.nodes[i].id].length; f++){  //iterujem flowmi
+					var ID = dataset.nodes[i].id.toString()+"_"+json_stats[dataset.nodes[i].id][f].table_id+"_"+stat_types[j];
+
+					var str = json_stats[dataset.nodes[i].id][f].match;
+					var pom = str.toString();
+					var arr = pom.split(',');
+					var input = "";
+					for (l=0; l<arr.length/2; l++){
+						input = input + arr[l*2] + "=" + arr[(l*2)+1] + ", "					
+					}
+					var match = input.slice(0, input.length-2);
+					//console.log("Json match=" + match)	
+					if(flow_stats_data[ID]==null){  //graf pre tabulku este neni
+
+						var stats = document.getElementById("flow_graph_container");
+						var graph = document.createElement("div");
+						graph.style.display = 'none';
+						graph.id = "graph"+ID;
+						//console.log("Graph id=" + graph.id);
+						graph.className = "flow_graph";
+						stats.appendChild(graph);
+						var obj = {
+								graph2d: null,
+								groups: new vis.DataSet(),
+								items: []
+						};
+						flow_stats_data[ID] = obj;
+
+						FlowGroupsSet[ID] = [];
+						var table = document.createElement('table');
+						table.id = "legend_" + graph.id;
+						table.className = "legend_table"; 
+						//table.style.display="none";
+						var tbody = document.createElement('tbody');
+						tbody.id = 'tbody_'+ ID;
+						var oTHead = table.createTHead();
+						var row, cell;
+
+						var heading = new Array();
+						heading[0] = "Flow number";
+						heading[1] = "Match rule";
+						var legend_div = document.getElementById("legend");
+
+						// Insert a row into the header.
+						row = oTHead.insertRow(-1);
+
+
+						// Insert cells into the header row.
+						for (x=0; x<heading.length; x++)
+						{
+							cell = row.insertCell(x);
+							cell.align = "center";
+							cell.style.fontWeight = "bold";
+							cell.innerHTML = heading[x];
+						}
+						table.appendChild(tbody);
+						legend_div.appendChild(table);
+
+						//console.log("graf este nie je");
+						//console.log(flow_stats_data[ID].groups);
+						if (flow_stats_data[ID].groups.get(match) == null) {
+
+							var flow = {
+									number: FlowGroupsSet[ID].length + 1,
+									match: match
+							};
+							FlowGroupsSet[ID].push(flow);
+							row = tbody.insertRow(-1); 
+							cell = row.insertCell(0);
+							cell.innerHTML = FlowGroupsSet[ID].length;
+
+							cell = row.insertCell(1);
+							cell.innerHTML = match;
+
+							flow_stats_data[ID].groups.add({id: match, content: "Flow " + (FlowGroupsSet[ID].length) + " start value: "+ json_stats[dataset.nodes[i].id][f][stat_types[j]]});	
+						}
+
+
+						var new_item = {
+								x: datetime.toString(),
+								y: 0,
+								group: match
+
+						};
+						//console.log("New item created");
+						flow_stats_data[ID].items.push(new_item);
+
+					}
+					else{
+						//console.log("Graf uz je");
+						//console.log(flow_stats_data[ID].groups);
+						if (flow_stats_data[ID].groups.get(match) == null) {
+
+							var flow = {
+									number: FlowGroupsSet[ID].length + 1,
+									match: match
+							};
+							FlowGroupsSet[ID].push(flow);
+							row = tbody.insertRow(-1); 
+							cell = row.insertCell(0);
+							cell.innerHTML = FlowGroupsSet[ID].length;
+
+							cell = row.insertCell(1);
+							cell.innerHTML = match;
+
+							flow_stats_data[ID].groups.add({id: match, content: "Flow " + (FlowGroupsSet[ID].length) + " start value: "+ json_stats[dataset.nodes[i].id][f][stat_types[j]]});	
+						}
+
+						var new_item = {
+								x: datetime.toString(),
+								y: 0,
+								group: match
+
+						};
+						//console.log("New item created");
+						flow_stats_data[ID].items.push(new_item);
+
+					}
+				}
+			}
+
+		}
+
+	}	
+	for(var key in flow_stats_data){
+		create_flow_graph(json_stats, key);
+	}
+	sel.options[0].selected = true;		
+	switch_fwd_flow(sel);	
+	old_flow_data = json_stats;
+	WINDOW_LOADER++;
+	if(WINDOW_LOADER==2){	 	
+		$j('#dimScreen').hide();
+		setInterval(function(){load_flow_stats()}, INTERVAL);
+		setInterval(function(){load_port_stats()}, INTERVAL);
+	}
+	
+}
+
+
+function update_flow_graph(json_stats){
+	var datetime = get_date();		
+	var pom = 0;
+	for(i=0; i<dataset.nodes.length; i++){
+
+		if(isNaN(dataset.nodes[i].id)){
+
+		}
+		else{
+			var sel = document.getElementById("sel_"+dataset.nodes[i].id.toString());
+			for (l=0; l< json_stats[dataset.nodes[i].id].length; l++){
+				var t_id = json_stats[dataset.nodes[i].id][l].table_id;
+				var opt = document.getElementById("opt_" + dataset.nodes[i].id.toString() + "_" + t_id);
+				//console.log("update_flow_graph - opt_id = " + opt)
+				if(opt == undefined){
+					//console.log("opt not defined, creating new opt");
+					opt = document.createElement("option");
+					opt.id = "opt_" + dataset.nodes[i].id.toString() + "_" + t_id;
+					opt.text = "Table " + t_id;
+					//console.log("option id = " + opt.id)
+					opt.value = t_id;
+					sel.add(opt, sel[sel.options.length-1]);
+				}
+
+			}
+
+			var stat_types = ["packet_count", "byte_count"];
+			for(j=0; j<stat_types.length; j++){
+				for (f=0; f<json_stats[dataset.nodes[i].id].length; f++){  //iterujem flowmi
+					var ID = dataset.nodes[i].id.toString()+"_"+json_stats[dataset.nodes[i].id][f].table_id+"_"+stat_types[j];
+					var str = json_stats[dataset.nodes[i].id][f].match;
+					var pom = str.toString();
+					var arr = pom.split(',');
+					var input = "";
+					for (l=0; l<arr.length/2; l++){
+						input = input + arr[l*2] + "=" + arr[(l*2)+1] + ", "					
+					}
+					var match = input.slice(0, input.length-2);
+					//console.log("Json match=" + match)	
+					if(flow_stats_data[ID]==null){  //graf pre tabulku este neni
+						//console.log("graf pre tabulku este neni");
+						var stats = document.getElementById("flow_graph_container");
+						var graph = document.createElement("div");
+						graph.style.display = 'none';
+						graph.id = "graph"+ID;
+						//console.log("Graph id=" + graph.id);
+						graph.className = "flow_graph";
+						stats.appendChild(graph);
+						var obj = {
+								graph2d: null,
+								groups: new vis.DataSet(),
+								items: []
+						};
+						flow_stats_data[ID] = obj;
+						FlowGroupsSet[ID] = [];
+						var table = document.createElement('table');
+						table.id = "legend_" + graph.id;
+						table.className = "legend_table"; 
+						table.style.display="none";
+						var tbody = document.createElement('tbody');
+						tbody.id = 'tbody_'+ ID;
+						var oTHead = table.createTHead();
+						var row, cell;
+
+						var heading = new Array();
+						heading[0] = "Flow number";
+						heading[1] = "Match rule";
+						var legend_div = document.getElementById("legend");
+
+						// Insert a row into the header.
+						row = oTHead.insertRow(-1);
+
+
+						// Insert cells into the header row.
+						for (x=0; x<heading.length; x++)
+						{
+							cell = row.insertCell(x);
+							cell.align = "center";
+							cell.style.fontWeight = "bold";
+							cell.innerHTML = heading[x];
+						}
+						table.appendChild(tbody);
+						legend_div.appendChild(table);
+
+						//console.log("graf este nie je");
+						//console.log(flow_stats_data[ID].groups);
+						if (flow_stats_data[ID].groups.get(match) == null) {
+
+							var flow = {
+									number: FlowGroupsSet[ID].length + 1,
+									match: match
+							};
+							FlowGroupsSet[ID].push(flow);
+							row = tbody.insertRow(-1); 
+							cell = row.insertCell(0);
+							cell.innerHTML = FlowGroupsSet[ID].length;
+
+							cell = row.insertCell(1);
+							cell.innerHTML = match;
+
+							flow_stats_data[ID].groups.add({id: match, content: "Flow " + (FlowGroupsSet[ID].length) + " start value: "+ json_stats[dataset.nodes[i].id][f][stat_types[j]]});	
+						}
+						var new_item = {
+								x: datetime.toString(),
+								y: 0,
+								//label: label1,
+								group: match										
+						};
+						//console.log("New item created");
+
+						flow_stats_data[ID].items.push(new_item);
+						create_flow_graph(json_stats, ID);
+					}
+					else{
+						if (flow_stats_data[ID].groups.get(match) == null) {
+
+							var tbody = document.getElementById('tbody_'+ID);
+							var flow = {
+									number: FlowGroupsSet[ID].length + 1,
+									match: match
+							};
+							FlowGroupsSet[ID].push(flow);
+
+							row = tbody.insertRow(-1); 
+							cell = row.insertCell(0);
+							cell.innerHTML = FlowGroupsSet[ID].length;
+
+							cell = row.insertCell(1);
+							cell.innerHTML = match;
+
+							flow_stats_data[ID].groups.add({id: match, content: "Flow " + (FlowGroupsSet[ID].length) + " start value: "+ json_stats[dataset.nodes[i].id][f][stat_types[j]]});	
+
+							var new_item = {
+									x: datetime.toString(),
+									y: 0,
+									//label: label1,
+									group: match										
+							};
+							flow_stats_data[ID].items.push(new_item);
+
+						}
+						else{
+
+							for(m = 0; m<old_flow_data[dataset.nodes[i].id].length; m++){
+
+								if(old_flow_data[dataset.nodes[i].id][m].match.toString() == json_stats[dataset.nodes[i].id][f].match.toString() &&
+										old_flow_data[dataset.nodes[i].id][m].table_id ==  json_stats[dataset.nodes[i].id][f].table_id ){
+
+									
+									if(parseInt(json_stats[dataset.nodes[i].id][f][stat_types[j]]) < parseInt(old_flow_data[dataset.nodes[i].id][m][stat_types[j]])){
+										var value = INTEGER - parseInt(old_flow_data[dataset.nodes[i].id][m][stat_types[j]]) + parseInt(json_stats[dataset.nodes[i].id][f][stat_types[j]]);
+										
+										var label2 = {
+											content: "Overflow",
+											className: "red"
+										};
+										var new_item = {
+												x: datetime.toString(),
+												y: value,
+												label: label2,
+												group: match										
+										};
+									}
+									else{
+										var value = parseInt(json_stats[dataset.nodes[i].id][f][stat_types[j]]) - parseInt(old_flow_data[dataset.nodes[i].id][m][stat_types[j]]);
+										var new_item = {
+												x: datetime.toString(),
+												y: value,
+												group: match										
+										};
+									}
+									//console.log('New value:' + json_stats[dataset.nodes[i].id][f][stat_types[j]]);
+									//console.log('Old value = ' + old_flow_data[dataset.nodes[i].id][f][stat_types[j]]);;
+									//console.log("New item created");
+									flow_stats_data[ID].items.push(new_item);
+									flow_stats_data[ID].graph2d.setItems(flow_stats_data[ID].items);
+								}		
+							}
+						}												
+					}
+				}
+			}
+		}
+	}
+
+	//for(var key in flow_stats_data){
+	//flow_stats_data[key].graph2d.setItems(flow_stats_data[key].items);
+	//}
+	old_flow_data = json_stats;
+}
+
+function create_flow_graph(json_stats, graph_id){
+	var container = document.getElementById('graph'+graph_id.toString());
+	var datetime = get_date();		
+	//console.log(datetime);		
+	var dataset = new vis.DataSet(flow_stats_data[graph_id].items);
+	var options = {
+			style:'line',
+			barChart: {width:50, align:'center', handleOverlap:'sideBySide'}, // align: left, center, right
+			drawPoints: {
+				size: 2	
+			},
+			shaded: {
+				orientation: 'bottom' // top, bottom
+			},
+			legend:{
+				enabled: true 
+			},
+			catmullRom: {
+				enabled: false
+			},
+			dataAxis: {
+				//icons:true,
+				customRange: {
+				left: {
+				min: 0						            	
+			}
+			}
+			},
+			timeAxis: {
+				scale: 'minute',
+				step: 1
+			}, 
+			orientation:'bottom',
+			zoomMax: 1000 * 60 * 15,
+			// zoomMin: 1000 * 60,
+			//start: datetime
+			// end: '2014-06-18'
+	};
+	flow_stats_data[graph_id].graph2d = new vis.Graph2d(container, flow_stats_data[graph_id].items, flow_stats_data[graph_id].groups, options); 
+	old_flow_data = json_stats;
+}
+
+
+
+//**************************  PORT STATISTICS *****************************************
+
+function xread_stats() {
+	var data_stats=this.responseText; 
+	var json_stats = JSON.parse(data_stats);
+	update_port_graph(json_stats);
+}						
+
+function load_port_stats() {
+	var xmlhttp_stats1 = new XMLHttpRequest();
+	var xmlhttp_stats2 = new XMLHttpRequest();
+	xmlhttp_stats1.open("GET","http://localhost:8080/dump_port_stats","true");
+	xmlhttp_stats1.send();
+	xmlhttp_stats2.open("GET","http://localhost:8080/dump_port_stats","true");
+	xmlhttp_stats2.onload = xread_stats;
+	xmlhttp_stats2.send();
+
+}
+
+function initialize_port_graph(json_stats) {	
+
+	var datetime = get_date();		
+	var pom = 0;
+	for(i=0; i<dataset.nodes.length; i++){
+
+		if(isNaN(dataset.nodes[i].id)){
+
+		}else{	
+			//console.log("Creating graphs for forwarder "+ dataset.nodes[i].id);	
+			var select = document.getElementById("fwd_num_cb");
+			var option = document.createElement("option");
+			option.text = "Forwarder "+dataset.nodes[i].id;
+			option.value = dataset.nodes[i].id;
+			option.selected = "selected";
+			select.add(option, select[pom]);
+			pom++;
+
+			for(k=0; k<port_stats_dict.length; k++){
+				if(port_stats_dict[k] != "duration_nsec" || port_stats_dict[k] != "duration_sec"){
+					var ID = dataset.nodes[i].id.toString()+"_"+port_stats_dict[k];	 
+					//console.log("Creating graphs for statistic "+ port_stats_dict[k]);	
+					var stats = document.getElementById("graph_container");
+					var graph = document.createElement("div");
+					graph.style.display = 'none';
+					graph.id = "graph"+ID;
+					//console.log("Graph id=" + graph.id);
+					graph.className = "graph";
+					stats.appendChild(graph);
+					var obj = {
+							graph2d: null,
+							groups: new vis.DataSet(),
+							items: []
+					};
+					port_stats_data[ID] = obj;
+
+
+					for (var j=0; j<json_stats[dataset.nodes[i].id].length; j++){
+						//console.log("Adding ports values to graph " +graph.id );
+						var port_number = parseInt(json_stats[dataset.nodes[i].id][j].port_no);
+						var fwd_id = dataset.nodes[i].id;
+						if (port_stats_data[ID].groups.get(port_number) == null) {
+							port_stats_data[ID].groups.add({id:port_number, content: "port "+port_number.toString() + " start value: " + json_stats[fwd_id][j][port_stats_dict[k]]});	
+						}
+
+						var new_item = {
+								x: datetime.toString(),
+								//y: parseInt(json_stats[fwd_id][j][port_stats_dict[k]]),
+								y: 0,
+								group: port_number
+
+
+						};
+						//console.log("New item created");
+						port_stats_data[ID].items.push(new_item);
+					}
+					create_graph(json_stats, ID);
+				}
+			}
+
+		}		
+	}	
+	select.options[0].selected = true;		
+	switch_fwd_stats(select);
+	WINDOW_LOADER++;
+	if(WINDOW_LOADER==2){	 	
+		$j('#dimScreen').hide();
+		setInterval(function(){load_flow_stats()}, INTERVAL);
+		setInterval(function(){load_port_stats()}, INTERVAL);
+	}
+	
+}
+
+function update_port_graph(json_stats) {
+	console.log(old_port_data);
+	console.log(json_stats);
+	var datetime = get_date();
+	console.log(datetime);		
+	for(i=0; i<dataset.nodes.length; i++){	
+		if(isNaN(dataset.nodes[i].id)){
+
+		}
+		else{	
+			for(k=0; k<port_stats_dict.length; k++){	
+				if(port_stats_dict[k] != "duration_nsec" || port_stats_dict[k] != "duration_sec"){
+					var fwd_id = dataset.nodes[i].id;
+					var ID = dataset.nodes[i].id.toString()+"_"+port_stats_dict[k];	
+					var items = [];					 
+					for (j=0; j<json_stats[dataset.nodes[i].id].length; j++){
+						var port_number = parseInt(json_stats[fwd_id][j].port_no);
+						if (port_stats_data[ID].groups.get(port_number) == null) {
+							port_stats_data[ID].groups.add({id:port_number, content: "port "+port_number.toString()});
+
+							var new_item = {
+									x: datetime.toString(),
+									y: 0, 
+									group: port_number
+
+							};
+							port_stats_data[ID].items.push(new_item);   
+						}
+						else{
+
+							if(parseInt(json_stats[fwd_id][j][port_stats_dict[k]]) < parseInt(old_port_data[fwd_id][j][port_stats_dict[k]])){
+								var value = INTEGER - parseInt(old_port_data[fwd_id][j][port_stats_dict[k]]) + parseInt(json_stats[fwd_id][j][port_stats_dict[k]]);
+								var label1 = {
+										content: "Overflow",
+										className: "red"
+								};
+								var new_item = {
+										x: datetime.toString(),      
+										y: value,
+										label: label1,
+										group: port_number										
+								};	
+							}
+							else{
+								var value = parseInt(json_stats[fwd_id][j][port_stats_dict[k]]) - parseInt(old_port_data[fwd_id][j][port_stats_dict[k]]);
+								var new_item = {
+										x: datetime.toString(),      
+										y: value,
+										group: port_number										
+								};
+							}
+							port_stats_data[ID].items.push(new_item);
+						}
+
+					}
+					port_stats_data[ID].graph2d.setItems(port_stats_data[ID].items);
+				}
+			}
+		}	
+	}
+	old_port_data = json_stats;
+}
+
+function create_graph(json_stats, graph_id) {
+
+	var rxp_container = document.getElementById('graph'+graph_id.toString());
+	var datetime = get_date();		
+	console.log(datetime);		
+	var dataset = new vis.DataSet(port_stats_data[graph_id].items);
+	var options = {
+			style:'bar',
+			barChart: {width:50, align:'center', handleOverlap:'sideBySide'}, // align: left, center, right
+			drawPoints: {
+				size: 1	
+			},
+			legend:{
+				enabled: true 
+			},
+			dataAxis: {
+				//icons:true,
+				customRange: {
+				left: {
+				min: 0						            	
+			}
+			}
+			},
+			timeAxis: {
+				scale: 'minute',
+				step: 1
+			}, 
+			orientation:'bottom',
+			zoomMax: 1000 * 60 * 15,
+			// zoomMin: 1000 * 60,
+			//start: datetime
+			// end: '2014-06-18'
+	};
+	port_stats_data[graph_id].graph2d = new vis.Graph2d(rxp_container, port_stats_data[graph_id].items, port_stats_data[graph_id].groups, options);  
+	old_port_data = json_stats;
+}	
+				
+//**************************  ADD APN  ***********************************************
+
+
+function apn_menu_init(){
+	FREE_PORTS = {};
+	for(var fwd in ALL_PORTS){
+		FREE_PORTS[fwd] = [];
+		for(i=0; i<ALL_PORTS[fwd].length; i++){
+			var used = false;
+			for(j=0; j<USED_PORTS[fwd].length; j++){
+				if(ALL_PORTS[fwd][i] == USED_PORTS[fwd][j])
+					used=true;
+			}
+			if(used==false)
+				FREE_PORTS[fwd].push(ALL_PORTS[fwd][i]);
+		}
+
+	}
+	console.log("USED PORTS");
+	console.log(USED_PORTS);
+	console.log("FREE PORTS");
+	console.log(FREE_PORTS);
+	//var inner_div = document.createElement("div");
+	//inner_div.id = "inner_apn_div";
+	//
+	//div.appendChild(inner_div);
+	console.log(FREE_PORTS);
+	for(var fwd in FREE_PORTS){
+		if(FREE_PORTS[fwd].length > 0){
+			var select_fwd = document.getElementById('add_apn_fwds_cb');
+			if(document.getElementById("fwd_cb_opt_"+fwd.toString()) == undefined){
+				//prida oprion ku comboboxu forwarderov
+				var fwd_option = document.createElement('option');
+				fwd_option.id = "fwd_cb_opt_"+fwd.toString();
+				fwd_option.text = "Forwarder " + fwd.toString();
+				fwd_option.value = fwd;
+				select_fwd.add(fwd_option, select_fwd[select_fwd.options]);
+
+				//vytvori combobox pre porty
+				var div = document.getElementById("choose_port_div");
+				var select_port = document.createElement('select');
+				select_port.id = "apn_port_cb_"+fwd;
+				select_port.setAttribute('onchange', "apn_switch_ports(this)"); 
+				select_port.className = "apn_port_cb";
+				div.appendChild(select_port);
+				console.log("aktualny forwarder");
+				console.log(FREE_PORTS[fwd]);
+				for(i=0; i<FREE_PORTS[fwd].length; i++){
+					//prida options do comboboxu portov
+					var port_option = document.createElement('option');
+					port_option.text = "Port " + FREE_PORTS[fwd][i].toString();
+					port_option.value = FREE_PORTS[fwd][i];
+					select_port.add(port_option, select_port[select_port.options.length]);	
+					console.log("Dlzka select_port " + select_port.options.length);
+				}
+				select_port.options[0].selected = true;
+			}
+		}
+	}
+	select_fwd.options[0].selected = true;
+	apn_switch_forwarder(select_fwd);
+}
+
+function apn_switch_forwarder(selection){
+	var val=selection.options[selection.selectedIndex].value;
+	$j(document).ready(function(){
+		$j('.apn_port_cb').hide();
+		$j('#apn_port_cb_'+val.toString()).show();
+	});
+}
+
+function add_new_apn(){
+	var forwarder = document.getElementById('add_apn_fwds_cb');
+	var fwd_id = forwarder.options[forwarder.selectedIndex].value;
+	var port = document.getElementById("apn_port_cb_"+fwd_id.toString());
+	var port_num = port.options[port.selectedIndex].value;
+	var apn = document.getElementById('apn_name');
+	var apn_name = apn.value;
+	var apn_ip = document.getElementById("apn_ip");
+	var ip_addr = apn_ip.value;
+	if(apn_name == ""){
+		error_dialog("APN name missing!");
+		return;
+	}
+	if(ip_addr == ""){
+		error_dialog("APN IP address missing!");
+		return;
+	}
+	var arr = ip_addr.split("/");
+	var mask = arr[1];
+	var is_ip = checkIsIPV4(arr[0]);
+	if(is_ip == false){
+		error_dialog("Wrong address format!");
+		return;
+	}
+	if(parseInt(arr[1]) < 1 || parseInt(arr[1]) > 32  || arr[1]==""){
+		error_dialog("Wrong mask!");
+		return;
+	}
+	if(APN_NAMES[apn_name.toLowerCase()] == true){ 
+		error_dialog("APN with this name already exists!");
+		return;
+	}
+	if(APN_IPs[ip_addr]==true){
+		error_dialog("IP already assigned!");
+		return;
+	}
+	APN_NAMES[apn_name.toLowerCase()] =true;
+	APN_IPs[ip_addr] = true;
+	
+	console.log("forwarder="+fwd_id+",port="+port_num+",name="+apn_name + ",ipaddr="+arr[0] + ",mask="+mask);
+	var http = new XMLHttpRequest();
+	http.open("GET","http://localhost:8080/add_apn/forwarder="+fwd_id+",port="+port_num+",name="+apn_name + ",ipaddr="+arr[0] + ",mask="+mask, "true");
+	http.send();
+	http.onreadystatechange = function(){
+		if(http.status == 200) {
+			//for(i=0; i<FREE_PORTS[fwd_id].length; i++){
+				//if(FREE_PORTS[fwd_id][i] == port_num){
+					//FREE_PORTS[fwd_id].splice(i, 1);
+					//if(FREE_PORTS[fwd_id].length == 0)
+					//console.log("FREE PORTS");
+					//console.log(FREE_PORTS);
+				//}
+			//}
+			//var inner_div = document.getElementById("inner_apn_div");
+			//var div = document.getElementById("choose_port_div");
+			//div.removeChild(inner_div);
+			port.remove(port.selectedIndex);
+			//if(port.options.length == 0){
+				//console.log(forwarder.options);
+				//forwarder.remove(forwarder.selectedIndex);
+				//console.log(forwarder.otions);
+				//var div = document.getElementById("choose_port_div");
+				//var div = port.parentElement;
+				//console.log("Port id " +port.id);
+				//console.log("PARENT " + div.id);
+				//var parent = document.getElementById("choose_port_div");
+				//parent.removeChild(port);
+				//div.removeChild(port);
+				//forwarder.options[0].selected = true;
+				//apn_switch_forwarder(forwarder);
+				USED_PORTS[parseInt(fwd_id)].push(parseInt(port_num));
+				apn_menu_init();
+				load_topo_json(false);
+				load_active_tunnels(false);
+			//}
+		}
+		else{
+			console.log(http.responsetext);
+			error_dialog("404 Not found!");
+		}	
+	}
+	console.log(APN_NAMES);
+	console.log(APN_IPs);
+}		
+
+jQuery(document).ready(function() {
+	$j('.pdp_submenu').click(function(){
+		load_active_tunnels(false);
+	});
+});
+
+jQuery(document).ready(function() {
+	jQuery('.tunnel_submenu').click(function(){
+		load_active_pdp(false);
+	});
+});
+
+
+
+jQuery(document).ready(function() {
+	$j('.manager .manager-links a').on('click', function(e)  {
+		var currentAttrValue = jQuery(this).attr('href');
+
+		// Show/Hide Tabs
+		jQuery('.manager ' + currentAttrValue).show().siblings().hide();
+		if(currentAttrValue != '#Stats'){
+			$j('.legend_table').hide();
+			if(currentAttrValue == '#ADD_APN'){
+				apn_menu_init();
+			}
+		}
+		else{	
+			var fwd_stat = document.getElementById("flow_fwd_cb");
+			var fwd_stat_val = fwd_stat.options[fwd_stat.selectedIndex].value;
+			var sel_tab = document.getElementById("sel_"+fwd_stat_val.toString());
+			var sel_tab_val = sel_tab.options[sel_tab.selectedIndex].value;
+			var sel_stat = document.getElementById("flow_statistic_cb");
+			var sel_stat_val = sel_stat.options[sel_stat.selectedIndex].value;
+			var graph = document.getElementById("graph"+fwd_stat_val.toString()+"_"+sel_tab_val + "_" + sel_stat_val);
+			$j('.legend_table').hide();
+			$j('#legend_'+graph.id).show();
+		}
+		// Change/remove current tab to active
+		jQuery(this).parent('li').addClass('menu_active').siblings().removeClass('menu_active');
+
+		e.preventDefault();
+	});
+});
+
+$j(document).ready(function(){
+	$j("#Tunnel_table").on("click", "tr", function(){
+		//alert(this.rowIndex);
+		var table = document.getElementById("Tunnel_table");
+		for(i=0; i<table.rows.length; i++){
+			$j(table.rows[i]).css("background", "#EEEEEE");
+		}
+		$j(this).css("background","#FF8080");
+
+		var apn = table.rows[this.rowIndex].cells[0].innerHTML.split("=");	
+		var bss = table.rows[this.rowIndex].cells[1].innerHTML;
+		var path_in = table.rows[this.rowIndex].cells[4].innerHTML.split("<br>");
+		var path = [];
+		path.push(apn[3]);
+		for (i=0; i<path_in.length-1; i++) {
+			var dp = path_in[i].split(",");
+			var dpid = dp[0].split("=");
+			path.push(dpid[1]);
+		}
+		path.push(bss);
+		console.log(path);	
+
+		var TUNNEL = {
+				tun_path: path,
+		};
+		//ACTIVE_TUNNELS.push(TUNNEL);
+		show_tunnels(TUNNEL);
+	});
+});
+
+
+function load_actions() {
+	var actions_tab = new Array();
+	actions_tab["0"]="OFPActionOutput";
+	actions_tab["11"]="OFPActionCopyTtlOut";
+	actions_tab["12"]="OFPActionCopyTtlIn";
+	actions_tab["15"]="OFPActionSetMplsTtl";
+	actions_tab["16"]="OFPActionDecMplsTtl";
+	actions_tab["17"]="OFPActionPushVlan";
+	actions_tab["18"]="OFPActionPopVlan";
+	actions_tab["19"]="OFPActionPushMpls";
+	actions_tab["20"]="OFPActionPopMpls";
+	actions_tab["21"]="OFPActionSetQueue";
+	actions_tab["22"]="OFPActionGroup";
+	actions_tab["23"]="OFPActionSetNwTtl";
+	actions_tab["24"]="OFPActionDecNwTtl";
+	actions_tab["25"]="OFPActionSetField";
+	actions_tab["26"]="OFPActionPushPbb";
+	actions_tab["27"]="OFPActionPopPbb";
+	//actions_tab["0xffff"]="OFPAT_EXPERIMENTER";
+	return actions_tab;
+}
+
+function get_action(key){
+	var actions = load_actions();
+	return actions[key];
+}
+
+function get_instruction(key){
+	var instructions = load_instructions();
+	return instructions[key];
+}
+
+function load_instructions() {
+	var inst_tab = new Array();
+	inst_tab["1"]="OFPInstructionGotoTable";
+	inst_tab["2"]="OFPInstructionWriteMetadata";
+	inst_tab["3"]="OFPIT_WRITE_ACTIONS";
+	inst_tab["4"]="OFPIT_APPLY_ACTIONS";
+	inst_tab["5"]="OFPIT_CLEAR_ACTIONS";
+	inst_tab["6"]="OFPInstructionMeter";
+	//inst_tab["0xFFFF"]="OFPIT_EXPERIMENTER";
+	return inst_tab;
+}
+
+function load_action_subtypes() {
+	var subtype_tab = new Array();
+	subtype_tab["1"]="PushGPRSNS";
+	subtype_tab["2"]="PopGPRSNS";
+	subtype_tab["3"]="PushUDPIP";
+	subtype_tab["4"]="PopUDPIP";
+	return subtype_tab;
+}
+
+function get_action_subtype(key){
+	var actions = load_action_subtypes();
+	return actions[key];
+}
+
+</script>
+<style>
+#dimScreen {
+    width: 100%;
+    height: 100%;
+    background:rgba(255,255,255,0.5); 
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100; /* Just to keep it at the very top */
+}
+#header {
+    background-color:black;
+    color:white;
+    text-align:center;
+    padding:5px;
+    list-style: none;	 
+}
+
+
+.manager_content {
+	width: 81%;
+	float: right;
+	padding-left: 2px;
+	background: #717D8C
+  
+}
+
+#mynetwork {
+   width: 35%;
+   height: 50%;
+   border: 17px solid #717D8C;
+   float: right;
+   background:#EEEEEE;
+   padding-top : 10px;
+    }
+
+#PDP {
+	width: 100%;
+	height: 525px;
+	float: left;
+}
+
+
+table, th, td {
+    border: 2px solid black;
+   
+}
+
+th, td {
+    padding: 5px;
+    text-align: center;
+ 	
+}
+
+#menu {
+	width: 15%;
+	float: left;
+   background: #2F343A;
+   height: 500px;
+}
+
+.manager{
+	width: 60%;
+	float: left;   
+	height: 90%;
+}
+.manager-links:after {
+        display:block;
+        clear:both;
+        content:'';
+}
+	
+.manager-links {
+  
+  font-size: 120%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  height: 10%;
+}
+
+
+.manager-links a {
+  background: #2F343A;
+  border-bottom: 1px solid #393939;
+  color: #ccc;
+  display: block;
+  margin: 0;
+  text-decoration: none;
+  font-weight: normal;
+  height: 100%;
+}
+.manager-links a:hover {
+  background: #2580a2; 
+  color: #fff;
+}
+
+.menu_item{
+  display: none;
+}
+
+.menu_item.menu_active {
+    display:block;
+}
+
+table #t01 {
+    width: 100%;    
+    background: #80CEB9;
+}
+
+table {
+	 font-size:14px;
+	 
+}
+
+#Tunnel_table tr:hover {
+    cursor: pointer;  
+}
+
+
+#graph_container{
+	background:#EEEEEE;
+}
+
+#flow_graph_container{
+	background:#EEEEEE;
+}
+
+.highlight{
+    background:red;
+}
+
+
+/* Paste this css to your style sheet file or under head tag */
+/* This only works with JavaScript, 
+if it's not present, don't show loader 
+.no-js #loader { display: none;  }
+.js #loader { display: block; position: absolute; left: 100px; top: 0; }
+.se-pre-con {
+	position: fixed;
+	left: 0px;
+	top: 0px;
+	width: 100%;
+	height: 100%;
+	z-index: 9999;
+	background:  center no-repeat #fff;
+}*/
+
+.rule_input{
+			padding-left: 4px;		
+		}	
+		
+		.match_comboboxes{
+			position: relative;
+		}	
+			
+		.comboboxes{
+			position: relative;
+		}
+		
+		#set_actions {
+		   width: 100%;
+			position: relative;
+		   background:#80CEB9;   		  
+		}	
+		
+		#others{
+			padding-top: 2%;
+			padding-bottom: 1%;
+			width: 100%;
+		   background:#DDDDDD;	  
+		}
+		
+		#set_inst{
+			background: #BDB69C;
+			width: 100%;
+			
+		}
+		
+		#match_combo{
+			width: 100%;
+			position: relative;
+		   background:#80CEB9;
+		}
+		
+	
+	.apn_port_cb {
+		width: 110px;
+		height: 22px;
+		font-size:16px;
+		background: #EEEEEE;
+		border-radius: 5px;	
+		font-family:Arial;
+		
+	}
+	
+	#add_apn_fwds_cb {
+		width: 125px;
+		height: 22px;
+		font-size:16px;
+		background: #EEEEEE;	
+		border-radius: 5px;	
+		font-family:Arial;
+	}
+	
+	.stats_combobox {
+		padding-bottom: 3px;
+		height: 22px;
+		font-size:16px;
+		background: #EEEEEE;
+		border-radius: 5px;	
+		font-family:Arial;	
+	}
+	.flow_fwd_tables {
+		padding-bottom: 3px;
+		width: 100px;
+		height: 22px;
+		font-size:16px;
+		background: #EEEEEE;
+		border-radius: 5px;	
+		font-family:Arial;	
+	}
+	
+	#apn_name_label {
+		color: #EEEEEE;
+	}
+	
+	#apn_ip_label {
+		color: #EEEEEE;
+	}
+	
+	#apn_title {
+		color: #EEEEEE;
+		font-size:22px;
+		text-decoration: underline;
+	}
+	
+	#legend {
+		
+		height: 90%px;
+		width: 90%px;
+		background:#717D8C;
+		
+		padding-top: 10px;
+		position: absolute;
+	}
+	
+	#flow_stats_legend {
+		float: right;
+		height: 45%;
+		width: 38%;
+		background: #717D8C;
+	
+	}
+
+	a:link {
+	    color:#ffffff;
+	    background-color:transparent;
+	    text-decoration:none;
+	}
+	a:visited {
+	    color:#ffffff;
+	    background-color:transparent;
+	    text-decoration:none;
+	}
+	a:hover {
+	    color:#ff0000;
+	    background-color:transparent;
+	    text-decoration:underline;
+	}
+	a:active {
+	    color:#ff0000;
+	    background-color:transparent;
+	    text-decoration:underline;
+	}
+	
+	
+	#footer {
+	    background-color:black;
+	    color:white;
+	    clear:both;
+	    text-align:center;
+	    padding-top:5px; 
+	}
+	
+ .tab-content {
+     padding:15px;
+     border-radius:0px;
+     box-shadow:1px 1px 1px 1px rgba(0,0,0,0.15);
+     background:#717D8C;
+     height: 1000px;
+	  font-family: Arial, Helvetica, sans-serif
+ }
+ 
+ .del_flow {
+	-moz-box-shadow:inset -1px -3px 3px 0px #91b8b3;
+	-webkit-box-shadow:inset -1px -3px 3px 0px #91b8b3;
+	box-shadow:inset -1px -3px 3px 0px #91b8b3;
+	background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #717D8C), color-stop(1, #6c7c7c));
+	background:-moz-linear-gradient(top, #717D8C 5%, #6c7c7c 100%);
+	background:-webkit-linear-gradient(top, #717D8C 5%, #6c7c7c 100%);
+	background:-o-linear-gradient(top, #717D8C 5%, #6c7c7c 100%);
+	background:-ms-linear-gradient(top, #717D8C 5%, #6c7c7c 100%);
+	background:linear-gradient(to bottom, #717D8C 5%, #6c7c7c 100%);
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#717D8C', endColorstr='#6c7c7c',GradientType=0);
+	background-color:#717D8C;
+	-moz-border-radius:7px;
+	-webkit-border-radius:7px;
+	border-radius:7px;
+	border:1px solid #566963;
+	display:inline-block;
+	cursor:pointer;
+	color:#ffffff;
+	font-family:Arial;
+	font-size:16px;
+	font-weight:bold;
+	padding:7px 16px;
+	text-decoration:none;
+	text-shadow:0px -1px 0px #2b665e;
+}
+.del_flow:hover {
+	background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #6c7c7c), color-stop(1, #717D8C));
+	background:-moz-linear-gradient(top, #6c7c7c 5%, #717D8C 100%);
+	background:-webkit-linear-gradient(top, #6c7c7c 5%, #717D8C 100%);
+	background:-o-linear-gradient(top, #6c7c7c 5%, #717D8C 100%);
+	background:-ms-linear-gradient(top, #6c7c7c 5%, #717D8C 100%);
+	background:linear-gradient(to bottom, #6c7c7c 5%, #717D8C 100%);
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#6c7c7c', endColorstr='#717D8C',GradientType=0);
+	background-color:#6c7c7c;
+}
+.del_flow:active {
+	position:relative;
+	top:1px;
+}
+
+.del_flow {
+	width: 90%;
+	height: 30px;
+	color: black;
+	background: #80CEB9;						 	
+}
+
+
+
+#add_apn_btn {
+	-moz-box-shadow:inset -1px -3px 3px 0px #91b8b3;
+	-webkit-box-shadow:inset -1px -3px 3px 0px #91b8b3;
+	box-shadow:inset -1px -3px 3px 0px #91b8b3;
+	background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #EEEEEE), color-stop(1, #6c7c7c));
+	background:-moz-linear-gradient(top, #717D8C 5%, #6c7c7c 100%);
+	background:-webkit-linear-gradient(top, #717D8C 5%, #6c7c7c 100%);
+	background:-o-linear-gradient(top, #717D8C 5%, #6c7c7c 100%);
+	background:-ms-linear-gradient(top, #717D8C 5%, #6c7c7c 100%);
+	background:linear-gradient(to bottom, #717D8C 5%, #6c7c7c 100%);
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#EEEEEE', endColorstr='#6c7c7c',GradientType=0);
+	background-color:#EEEEEE;
+	-moz-border-radius:7px;
+	-webkit-border-radius:7px;
+	border-radius:7px;
+	border:1px solid #566963;
+	display:inline-block;
+	cursor:pointer;
+	color:#ffffff;
+	font-family:Arial;
+	font-size:16px;
+	font-weight:bold;
+	padding:7px 16px;
+	text-decoration:none;
+	text-shadow:0px -1px 0px #2b665e;
+}
+#add_apn_btn:hover {
+	background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #6c7c7c), color-stop(1, #EEEEEE));
+	background:-moz-linear-gradient(top, #6c7c7c 5%, #717D8C 100%);
+	background:-webkit-linear-gradient(top, #6c7c7c 5%, #717D8C 100%);
+	background:-o-linear-gradient(top, #6c7c7c 5%, #717D8C 100%);
+	background:-ms-linear-gradient(top, #6c7c7c 5%, #717D8C 100%);
+	background:linear-gradient(to bottom, #6c7c7c 5%, #717D8C 100%);
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#6c7c7c', endColorstr='#EEEEEE',GradientType=0);
+	background-color:#6c7c7c;
+}
+#add_apn_btn:active {
+	position:relative;
+	top:1px;
+}
+
+#add_apn_btn {
+	width: 20%;
+	height: 30px;
+	color: black;
+	background: #EEEEEE;						 	
+}
+
+.legend_table {
+	background: #EEEEEE;
+}
+
+
+
+
+.add_flow_btns {
+	-moz-box-shadow:inset -1px -2px 2px 0px #91b8b3;
+	-webkit-box-shadow:inset -1px -2px 2px 0px #91b8b3;
+	box-shadow:inset -1px -2px 2px 0px #91b8b3;
+	background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #EEEEEE), color-stop(1, #6c7c7c));
+	background:-moz-linear-gradient(top, #717D8C 5%, #6c7c7c 100%);
+	background:-webkit-linear-gradient(top, #717D8C 5%, #6c7c7c 100%);
+	background:-o-linear-gradient(top, #717D8C 5%, #6c7c7c 100%);
+	background:-ms-linear-gradient(top, #717D8C 5%, #6c7c7c 100%);
+	background:linear-gradient(to bottom, #717D8C 5%, #6c7c7c 100%);
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#EEEEEE', endColorstr='#6c7c7c',GradientType=0);
+	background-color:#EEEEEE;
+	-moz-border-radius:7px;
+	-webkit-border-radius:7px;
+	-webkit-border-radius:7px;
+	border-radius:7px;
+	border:1px solid #566963;
+	display:inline-block;
+	cursor:pointer;
+	color:#ffffff;
+	font-family:Arial;
+	font-size:11px;
+	
+	padding:2px 2px;
+	text-decoration:none;
+	text-shadow:0px -1px 0px #2b665e;
+}
+.add_flow_btns:hover {
+	background:-webkit-gradient(linear, left top, left bottom, color-stop(0.05, #6c7c7c), color-stop(1, #EEEEEE));
+	background:-moz-linear-gradient(top, #6c7c7c 5%, #717D8C 100%);
+	background:-webkit-linear-gradient(top, #6c7c7c 5%, #717D8C 100%);
+	background:-o-linear-gradient(top, #6c7c7c 5%, #717D8C 100%);
+	background:-ms-linear-gradient(top, #6c7c7c 5%, #717D8C 100%);
+	background:linear-gradient(to bottom, #6c7c7c 5%, #717D8C 100%);
+	filter:progid:DXImageTransform.Microsoft.gradient(startColorstr='#6c7c7c', endColorstr='#EEEEEE',GradientType=0);
+	background-color:#6c7c7c;
+}
+.add_flow_btns:active {
+	position:relative;
+	top:1px;
+}
+
+.add_flow_btns {
+	width: 70px;
+	height: 24px;
+	color: black;
+	background: #EEEEEE;						 	
+}
+
+#submit_btn {
+	width: 100px;
+}
+
+.match_comboboxes {
+	height: 24px;
+	font-size:16px;
+	background: #EEEEEE;	
+	border-radius: 5px;	
+	font-family:Arial;
+}
+
+.inst_comboboxes {
+	height: 24px;
+	font-size:16px;
+	background: #EEEEEE;	
+	border-radius: 5px;	
+	font-family:Arial;
+}
+
+.action_comboboxes {
+	height: 24px;
+	font-size:16px;
+	background: #EEEEEE;	
+	border-radius: 5px;	
+	font-family:Arial;
+}
+
+
+</style>
+</body>
+</html>
+
